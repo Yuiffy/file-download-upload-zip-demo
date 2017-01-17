@@ -1,4 +1,4 @@
-package MyGroup.MySystem.storage;
+package com.dyf.download.storage;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

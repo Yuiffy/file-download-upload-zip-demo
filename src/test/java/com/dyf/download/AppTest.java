@@ -1,4 +1,4 @@
-package MyGroup.MySystem;
+package com.dyf.download;
 
 import junit.framework.Test;
 import junit.framework.TestCase;

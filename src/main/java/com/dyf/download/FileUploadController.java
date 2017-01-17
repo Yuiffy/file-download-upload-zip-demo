@@ -1,12 +1,12 @@
-package MyGroup.MySystem;
+package com.dyf.download;
 
 /**
  * Created by yuiff on 2017/1/16.
  */
 
 
-import MyGroup.MySystem.storage.StorageFileNotFoundException;
-import MyGroup.MySystem.storage.StorageService;
+import com.dyf.download.storage.StorageFileNotFoundException;
+import com.dyf.download.storage.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;

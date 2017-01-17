@@ -1,7 +1,7 @@
-package MyGroup.MySystem;
+package com.dyf;
 
-import MyGroup.MySystem.storage.StorageProperties;
-import MyGroup.MySystem.storage.StorageService;
+import com.dyf.download.storage.StorageProperties;
+import com.dyf.download.storage.StorageService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
