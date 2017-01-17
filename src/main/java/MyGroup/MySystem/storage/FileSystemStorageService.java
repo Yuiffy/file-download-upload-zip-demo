@@ -9,10 +9,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.stream.Stream;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class FileSystemStorageService implements StorageService {
@@ -37,11 +39,16 @@ public class FileSystemStorageService implements StorageService {
     }
 
     @Override
-    public Stream<Path> loadAll() {
+    public List<Path> loadAll() {
         try {
-            return Files.walk(this.rootLocation, 1)
-                    .filter(path -> !path.equals(this.rootLocation))
-                    .map(path -> this.rootLocation.relativize(path));
+
+            List<Path> filePaths = new ArrayList<>();
+            try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(FileSystemStorageService.this.rootLocation)) {
+                for (Path path : directoryStream) {
+                    filePaths.add(path);
+                }
+            }
+            return filePaths;
         } catch (IOException e) {
             throw new StorageException("Failed to read stored files", e);
         }

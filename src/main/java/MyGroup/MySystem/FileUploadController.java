@@ -19,12 +19,11 @@ import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBui
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
-import java.net.URLDecoder;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/upload")
@@ -40,24 +39,22 @@ public class FileUploadController {
     @GetMapping("")
     public String listUploadedFiles(Model model) throws IOException {
 
-        List<String> urls = storageService
-                .loadAll()
-                .map(path ->
-                        MvcUriComponentsBuilder
-                                .fromMethodName(FileUploadController.class, "serveFile", path.getFileName().toString())
-                                .build().encode().toString())
-                .collect(Collectors.toList());
+        List<Path> paths = storageService
+                .loadAll();
+        List<String> urls = new ArrayList<>(paths.size());
+        List<String> names = new ArrayList<>(paths.size());
+        for(Path path:paths){
+            urls.add(MvcUriComponentsBuilder
+                    .fromMethodName(FileUploadController.class, "serveFile", path.getFileName().toString())
+                    .build().encode().toString());
+            names.add(path.getFileName().toString());
+        }
 
-        List<String> names = storageService
-                .loadAll()
-                .map(path ->
-                        path.getFileName().toString())
-                .collect(Collectors.toList());
         List fileAndNames = new ArrayList<Map<String,String>>(urls.size());
         for(int i=0; i<urls.size(); i++){
             Map<String,String> mp = new HashMap<>();
-            mp.put("url",urls.get(i));
-            mp.put("name",names.get(i));
+            mp.put("url",(String)urls.get(i));
+            mp.put("name",(String)names.get(i));
             fileAndNames.add(mp);
         }
         model.addAttribute("files", fileAndNames);
