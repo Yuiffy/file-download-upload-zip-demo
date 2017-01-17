@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
 <head>
-<meta charset="utf-8" />
-<title>One Page</title>
+    <meta charset="utf-8"/>
+    <title>One Page</title>
 </head>
 
 <body>
 <a th:href="@{/file}">file download demo page</a>
+<a th:href="@{/upload}">file upload demo page</a>
 <p>输入两个数字，点submit</p>
 <form action="/testAction">
-	<input name="numA"/>
-	<input name="numB"/>
-	<button type="submit">submit</button>
+    <input name="numA"/>
+    <input name="numB"/>
+    <button type="submit">submit</button>
 </form>
 </body>
 </html>
