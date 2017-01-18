@@ -28,6 +28,11 @@ public class NormalReplacer implements Replacer {
     }
 
     @Override
+    public void reset(Map<String, String> kvMap) {
+        tokens = kvMap;
+    }
+
+    @Override
     public String doReplace(String template) {
         List<String> keyList = new ArrayList<>();
         //do regex escape for value string, because will make keys into patternString

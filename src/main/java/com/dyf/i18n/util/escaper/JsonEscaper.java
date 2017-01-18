@@ -8,7 +8,8 @@ import java.util.List;
 /**
  * Created by yuiff on 2017/1/11.
  */
-public class JsonEscaper implements Escaper{
+public class JsonEscaper implements Escaper {
+    private static final String fileExtension = "json";
     @Override
     public List<String> escape(List<String> list) {
         List<String> ret = new ArrayList<>(list.size());
@@ -25,5 +26,10 @@ public class JsonEscaper implements Escaper{
             ret.add(StringEscapeUtils.unescapeJson(item));
         }
         return ret;
+    }
+
+    @Override
+    public String getFileExtension() {
+        return JsonEscaper.fileExtension;
     }
 }

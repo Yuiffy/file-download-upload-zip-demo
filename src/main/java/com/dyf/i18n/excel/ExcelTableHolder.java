@@ -23,7 +23,11 @@ public class ExcelTableHolder implements TableHolder{
     }
 
     public ExcelTableHolder(File file) throws IOException, InvalidFormatException {
-        InputStream inp = new FileInputStream(file);
+        //根据上述创建的输入流 创建工作簿对象
+        this(new FileInputStream(file));
+    }
+
+    public ExcelTableHolder(InputStream inp) throws IOException, InvalidFormatException {
         //根据上述创建的输入流 创建工作簿对象
         workbook = WorkbookFactory.create(inp);
         sheet = workbook.getSheetAt(0);

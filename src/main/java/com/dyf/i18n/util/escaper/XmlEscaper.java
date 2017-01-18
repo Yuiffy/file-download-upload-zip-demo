@@ -8,7 +8,8 @@ import java.util.List;
 /**
  * Created by yuiff on 2017/1/11.
  */
-public class XmlEscaper implements Escaper{
+public class XmlEscaper implements Escaper {
+    private static final String fileExtension = "xml";
     @Override
     public List<String> escape(List<String> list) {
         List<String> ret = new ArrayList<>(list.size());
@@ -25,5 +26,10 @@ public class XmlEscaper implements Escaper{
             ret.add(StringEscapeUtils.unescapeXml(item));
         }
         return ret;
+    }
+
+    @Override
+    public String getFileExtension() {
+        return XmlEscaper.fileExtension;
     }
 }

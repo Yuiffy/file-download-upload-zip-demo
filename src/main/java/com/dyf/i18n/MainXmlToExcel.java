@@ -14,7 +14,7 @@ import java.util.List;
 public class MainXmlToExcel {
 
     //collect many android xml i18n file to a excel file
-    public static void main3(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         final String xmlInputDirString = "./workfiles/xml2excel/xml_input/";
         final String outputDirString = "./workfiles/xml2excel/excel_output/";
 

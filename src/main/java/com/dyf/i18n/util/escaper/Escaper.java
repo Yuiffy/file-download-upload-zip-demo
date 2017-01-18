@@ -10,4 +10,6 @@ public interface Escaper {
     public List<String> escape(List<String> list);
 
     public List<String> unescape(List<String> list);
+
+    public String getFileExtension();
 }

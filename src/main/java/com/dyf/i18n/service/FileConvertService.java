@@ -6,6 +6,9 @@ import com.dyf.i18n.file.KeyValueFileHandler;
 import com.dyf.i18n.file.XmlFileHandler;
 import com.dyf.i18n.replace.NormalReplacer;
 import com.dyf.i18n.replace.Replacer;
+import com.dyf.i18n.replace.template.NormalTemplateHolder;
+import com.dyf.i18n.replace.template.TemplateHolder;
+import com.dyf.i18n.util.FileType;
 import com.dyf.i18n.util.ListStringUtil;
 import com.dyf.i18n.util.escaper.Escaper;
 import com.dyf.i18n.util.escaper.JsonEscaper;
@@ -14,20 +17,19 @@ import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Created by yuiff on 2017/1/3.
  */
 public class FileConvertService {
-    public int excelToOtherAndOutputToFile(TableHolder tableHolder, File templateFilenameFile, String outputDir, String stringPrefix, String stringSuffix, String escapeType) throws IOException, InvalidFormatException {
+    public int excelToOtherAndOutputToFile(TableHolder tableHolder, File templateFilenameFile, String outputDir, String stringPrefix, String stringSuffix, FileType escapeType) throws IOException, InvalidFormatException {
         new File(outputDir).mkdirs();
         String template = new String(Files.readAllBytes(Paths.get(templateFilenameFile.getPath())));
         List<String> titles = tableHolder.getFirstRowString();
@@ -54,10 +56,10 @@ public class FileConvertService {
         return 0;
     }
 
-    private Escaper getEscaper(String escapeType) {
+    private Escaper getEscaper(FileType escapeType) {
         Escaper escaper;
-        if (escapeType.equals("xml")) escaper = new XmlEscaper();
-        else if (escapeType.equals("json")) escaper = new JsonEscaper();
+        if (escapeType.equals(FileType.xml)) escaper = new XmlEscaper();
+        else if (escapeType.equals(FileType.json)) escaper = new JsonEscaper();
         else escaper = new JsonEscaper();
         return escaper;
     }
@@ -87,5 +89,26 @@ public class FileConvertService {
             excelHolder.addColumn(file.getName(), kvMap, 0);
         }
         excelHolder.write(excelOutputStream);
+    }
+
+    public ByteArrayOutputStream excelToOtherZip(TableHolder tableHolder, String template, String stringPrefix, String stringSuffix, Escaper escaper, String outputFileNamePrefix) throws IOException, InvalidFormatException {
+        TemplateHolder templateHolder = new NormalTemplateHolder(tableHolder,escaper,template,stringPrefix,stringSuffix);
+        List<String> titles = templateHolder.getFirstRowString();
+        ByteArrayOutputStream bo = new ByteArrayOutputStream();
+        ZipOutputStream zipOut= new ZipOutputStream(bo);
+        for (int i = 1; i < titles.size(); i++) {
+            String lang = titles.get(i);
+            String outputFileName = outputFileNamePrefix+"_"+lang+"."+escaper.getFileExtension();
+            String outputString = templateHolder.getRepacedTemplate(i);
+            try (PrintWriter out = new PrintWriter(outputFileName)) {
+                out.println(outputString);
+            }
+            zipOut.putNextEntry( new ZipEntry(outputFileName));
+            zipOut.write(outputString.getBytes());
+            zipOut.closeEntry();
+            System.out.println("zip File finish:" + outputFileName);
+        }
+        zipOut.close();
+        return bo;
     }
 }
