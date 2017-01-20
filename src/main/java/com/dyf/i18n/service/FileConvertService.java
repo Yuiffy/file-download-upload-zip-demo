@@ -1,13 +1,13 @@
 package com.dyf.i18n.service;
 
-import com.dyf.i18n.excel.ExcelTableHolder;
-import com.dyf.i18n.excel.TableHolder;
 import com.dyf.i18n.file.KeyValueFileHandler;
 import com.dyf.i18n.file.XmlFileHandler;
 import com.dyf.i18n.replace.NormalReplacer;
 import com.dyf.i18n.replace.Replacer;
 import com.dyf.i18n.replace.template.NormalTemplateHolder;
 import com.dyf.i18n.replace.template.TemplateHolder;
+import com.dyf.i18n.table.ExcelTableHolder;
+import com.dyf.i18n.table.TableHolder;
 import com.dyf.i18n.util.FileType;
 import com.dyf.i18n.util.ListStringUtil;
 import com.dyf.i18n.util.escaper.Escaper;
@@ -20,9 +20,12 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 /**
@@ -96,19 +99,34 @@ public class FileConvertService {
         List<String> titles = templateHolder.getFirstRowString();
         ByteArrayOutputStream bo = new ByteArrayOutputStream();
         ZipOutputStream zipOut= new ZipOutputStream(bo);
+        Set<String> nameSet = new HashSet<>();
         for (int i = 1; i < titles.size(); i++) {
             String lang = titles.get(i);
             String outputFileName = outputFileNamePrefix+"_"+lang+"."+escaper.getFileExtension();
-            String outputString = templateHolder.getRepacedTemplate(i);
-            try (PrintWriter out = new PrintWriter(outputFileName)) {
-                out.println(outputString);
+            if(nameSet.contains(outputFileName)){
+                System.out.println("Duplicate file will not output, name:"+outputFileName);
+                continue;
             }
+            nameSet.add(outputFileName);
+            String outputString = templateHolder.getRepacedTemplate(i);
             zipOut.putNextEntry( new ZipEntry(outputFileName));
             zipOut.write(outputString.getBytes());
             zipOut.closeEntry();
-            System.out.println("zip File finish:" + outputFileName);
+//            System.out.println("zip File finish:" + outputFileName);
         }
+
+        zipOut.putNextEntry( new ZipEntry("excel.xls"));
+        tableHolder.write(zipOut);
+        zipOut.closeEntry();
+
         zipOut.close();
         return bo;
+    }
+
+    public void ManyXmlToOneExcelFile(ZipInputStream zipInputStream, OutputStream excelOutputStream) throws IOException, SAXException, ParserConfigurationException {
+        ZipEntry entry;
+        while((entry = zipInputStream.getNextEntry())!= null) {
+            //TODO
+        }
     }
 }

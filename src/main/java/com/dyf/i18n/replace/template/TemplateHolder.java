@@ -1,6 +1,6 @@
 package com.dyf.i18n.replace.template;
 
-import com.dyf.i18n.excel.TableHolder;
+import com.dyf.i18n.table.TableHolder;
 import com.dyf.i18n.util.escaper.Escaper;
 
 import java.util.List;

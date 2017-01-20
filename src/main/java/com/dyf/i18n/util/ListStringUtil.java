@@ -17,7 +17,7 @@ public class ListStringUtil {
         String suf = suffix == null ? "" : suffix;
         List<String> ret = new ArrayList<>(list.size());
         for(String item:list){
-            ret.add(prefix + item + suffix);
+            ret.add(pre + item + suf);
         }
         return ret;
     }

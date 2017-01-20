@@ -2,10 +2,11 @@ package com.dyf.webi18n;
 
 import com.dyf.download.FileUploadController;
 import com.dyf.download.storage.StorageService;
-import com.dyf.i18n.excel.ExcelTableHolder;
 import com.dyf.i18n.replace.template.NormalTemplateHolder;
 import com.dyf.i18n.replace.template.TemplateHolder;
 import com.dyf.i18n.service.FileConvertService;
+import com.dyf.i18n.table.ExcelTableHolder;
+import com.dyf.i18n.table.TableHolder;
 import com.dyf.i18n.util.FileType;
 import com.dyf.i18n.util.escaper.EscaperFactory;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -94,9 +95,38 @@ public class i18nController {
     }
 
 
-
     @GetMapping("/excel2others")
     public String excel2others(Model model) throws IOException {
         return "upload/excel2others";
+    }
+
+    @GetMapping("/multiexcel")
+    public String multiexcel2others() {
+        return "upload/multiupload";
+    }
+
+    @PostMapping("/multiexcel.zip")
+    @ResponseBody
+    public byte[] multiexcel2othersPost(MultipartFile[] files, MultipartFile file2, FileType fileType, String prefix, String suffix, String outfilePrefix,
+                                        RedirectAttributes redirectAttributes) throws IOException, InvalidFormatException {
+        String template = new String(file2.getBytes());
+
+        FileConvertService convertService = new FileConvertService();
+        TableHolder tableHolder = null;
+        System.out.println(files.length);
+        System.out.println(files);
+        if (files != null && files.length != 0)
+            tableHolder = new ExcelTableHolder(files[0].getInputStream());
+        else tableHolder = new ExcelTableHolder();
+        for (int i = 1; i < files.length; i++)
+            tableHolder.merge(new ExcelTableHolder(files[i].getInputStream()));
+        ByteArrayOutputStream out = convertService.excelToOtherZip(tableHolder, template, prefix, suffix, EscaperFactory.getEscaper(fileType), outfilePrefix);
+
+        return out.toByteArray();
+    }
+
+    @GetMapping("/xmls2excel")
+    public String xmls2excel() {
+        return "upload/xmls2excel";
     }
 }

@@ -6,11 +6,11 @@
 </div>
 <div><p>文件类型影响转义。前缀后缀是用来防止替换到文本内容以外的东西，json的一般都是双引号，xml的一般是“>”和“&lt;”。</p></div>
 <div>
-    <form method="POST" enctype="multipart/form-data" action="/i18n/excel2others.zip">
+    <form method="POST" enctype="multipart/form-data" action="/i18n/multiexcel.zip">
         <table>
             <tr>
                 <td>Excel(xls) to upload:</td>
-                <td><input type="file" name="file"/></td>
+                <td><input type="file" name="files" multiple=""/></td>
             </tr>
             <tr>
                 <td>Template to upload:</td>
