@@ -112,15 +112,12 @@ public class i18nController {
         String template = new String(file2.getBytes());
 
         FileConvertService convertService = new FileConvertService();
-        TableHolder tableHolder = null;
         System.out.println(files.length);
         System.out.println(files);
-        if (files != null && files.length != 0)
-            tableHolder = new ExcelTableHolder(files[0].getInputStream());
-        else tableHolder = new ExcelTableHolder();
+        List<TableHolder> tableHolders = new ArrayList<>();
         for (int i = 1; i < files.length; i++)
-            tableHolder.merge(new ExcelTableHolder(files[i].getInputStream()));
-        ByteArrayOutputStream out = convertService.excelToOtherZip(tableHolder, template, prefix, suffix, EscaperFactory.getEscaper(fileType), outfilePrefix);
+            tableHolders.add(new ExcelTableHolder(files[i].getInputStream()));
+        ByteArrayOutputStream out = convertService.excelToOtherZip(tableHolders, template, prefix, suffix, fileType, outfilePrefix, null);
 
         return out.toByteArray();
     }
