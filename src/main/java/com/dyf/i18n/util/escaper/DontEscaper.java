@@ -1,5 +1,7 @@
 package com.dyf.i18n.util.escaper;
 
+import com.dyf.i18n.util.FileType;
+
 /**
  * Created by yuiff on 2017/2/8.
  */
@@ -27,5 +29,10 @@ public class DontEscaper extends AbstractEscaper implements Escaper {
     @Override
     public String getFileExtension() {
         return fileExtension;
+    }
+
+    @Override
+    public FileType getFileType() {
+        return FileType.dontEscape;
     }
 }

@@ -23,7 +23,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -108,14 +110,12 @@ public class i18nController {
     @PostMapping("/multiexcel.zip")
     @ResponseBody
     public byte[] multiexcel2othersPost(MultipartFile[] files, MultipartFile file2, FileType fileType, String prefix, String suffix, String outfilePrefix,
-                                        RedirectAttributes redirectAttributes) throws IOException, InvalidFormatException {
+                                        RedirectAttributes redirectAttributes) throws IOException, InvalidFormatException, ParserConfigurationException, SAXException {
         String template = new String(file2.getBytes());
 
         FileConvertService convertService = new FileConvertService();
-        System.out.println(files.length);
-        System.out.println(files);
         List<TableHolder> tableHolders = new ArrayList<>();
-        for (int i = 1; i < files.length; i++)
+        for (int i = 0; i < files.length; i++)
             tableHolders.add(new ExcelTableHolder(files[i].getInputStream()));
         ByteArrayOutputStream out = convertService.excelToOtherZip(tableHolders, template, prefix, suffix, fileType, outfilePrefix, null);
 

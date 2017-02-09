@@ -19,9 +19,9 @@ public class MainExcelToOthers {
     //convert table to many files like timplate
     public static void main(String[] args) throws Exception {
 //        excel2xmls();
-//            excel2jsons_map();
+            excel2jsons_map();
 //        excel2jsons_map_limit_language();
-        jsonHand();
+//        jsonHand();
     }
 
     public static void jsonHand() throws IOException {

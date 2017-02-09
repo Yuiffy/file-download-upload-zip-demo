@@ -1,6 +1,7 @@
 package com.dyf.i18n.util.escaper;
 
-import org.apache.commons.lang3.StringEscapeUtils;
+import com.dyf.i18n.util.FileType;
+import org.apache.commons.lang.StringEscapeUtils;
 
 /**
  * Created by yuiff on 2017/1/11.
@@ -21,5 +22,10 @@ public class XmlEscaper extends AbstractEscaper implements Escaper {
     @Override
     public String getFileExtension() {
         return XmlEscaper.fileExtension;
+    }
+
+    @Override
+    public FileType getFileType() {
+        return FileType.xml;
     }
 }

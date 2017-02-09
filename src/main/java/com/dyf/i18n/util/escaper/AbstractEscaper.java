@@ -30,7 +30,4 @@ public abstract class AbstractEscaper implements Escaper {
         }
         return ret;
     }
-
-    @Override
-    public abstract String getFileExtension();
 }

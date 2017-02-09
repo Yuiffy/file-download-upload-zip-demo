@@ -1,7 +1,7 @@
 package com.dyf.i18n.service;
 
+import com.dyf.i18n.file.FileHandlerFactory;
 import com.dyf.i18n.file.KeyValueFileHandler;
-import com.dyf.i18n.file.XmlFileHandler;
 import com.dyf.i18n.replace.NormalReplacer;
 import com.dyf.i18n.replace.Replacer;
 import com.dyf.i18n.replace.template.NormalTemplateHolder;
@@ -9,10 +9,8 @@ import com.dyf.i18n.replace.template.TemplateHolder;
 import com.dyf.i18n.table.ExcelTableHolder;
 import com.dyf.i18n.table.TableHolder;
 import com.dyf.i18n.util.FileType;
-import com.dyf.i18n.util.ListStringUtil;
 import com.dyf.i18n.util.escaper.Escaper;
-import com.dyf.i18n.util.escaper.JsonEscaper;
-import com.dyf.i18n.util.escaper.XmlEscaper;
+import com.dyf.i18n.util.escaper.EscaperFactory;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.xml.sax.SAXException;
 
@@ -21,9 +19,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 /**
@@ -34,42 +32,9 @@ public class FileConvertService {
         return excelToOthersMap(tableHolder, template, stringPrefix, stringSuffix, escapeType, null);
     }
 
-    public Map<String, String> excelToOthersMap2(TableHolder tableHolder, String template, String stringPrefix, String stringSuffix, FileType escapeType, Set<String> languageOnly) throws IOException, InvalidFormatException {
-        Map<String, String> ret = new HashMap<>();
-        List<String> titles = tableHolder.getFirstRowString();
-        Escaper escaper = getEscaper(escapeType);
-        List<String> keyList = ListStringUtil.addPrefixSuffix(
-                escaper.escape(
-                        tableHolder.getColStringWithOutFirstRow(0)
-                ), stringPrefix, stringSuffix);
-        for (int i = 1; i < titles.size(); i++) {
-            String lang = titles.get(i);
-            if (languageOnly != null && !languageOnly.contains(lang)) continue;
-            List<String> valueList = ListStringUtil.addPrefixSuffix(
-                    escaper.escape(
-                            tableHolder.getColStringWithOutFirstRow(i)
-                    ), stringPrefix, stringSuffix);
-            Map<String, String> kvMap = ListStringUtil.list2map(keyList, valueList);
-
-            String outputString = getTranslatedString(template, kvMap);
-            ret.put(lang, outputString);
-            System.out.println("translated finish:" + lang);
-        }
-        return ret;
-    }
-
-
     public Map<String, String> excelToOthersMap(TableHolder tableHolder, String template, String stringPrefix, String stringSuffix, FileType escapeType, Set<String> languageOnly) throws IOException, InvalidFormatException {
-        Escaper escaper = getEscaper(escapeType);
+        Escaper escaper = EscaperFactory.getEscaper(escapeType);
         return excelToOthersMap(tableHolder, template, stringPrefix, stringSuffix, escaper, languageOnly);
-    }
-
-    private Escaper getEscaper(FileType escapeType) {
-        Escaper escaper;
-        if (escapeType.equals(FileType.xml)) escaper = new XmlEscaper();
-        else if (escapeType.equals(FileType.json)) escaper = new JsonEscaper();
-        else escaper = new JsonEscaper();
-        return escaper;
     }
 
     public String getOutputFileName(String templateFilename, String outputDir, String lang) {
@@ -85,18 +50,34 @@ public class FileConvertService {
         return replacer.doReplace(template);
     }
 
-    public void ManyXmlToOneExcelFile(List<File> xmlFiles, OutputStream excelOutputStream) throws IOException, SAXException, ParserConfigurationException {
+    public void manyOtherToOneExcelFile(List<String> files, List<String> filesName, FileType fileType, OutputStream excelOutputStream) throws IOException, SAXException, ParserConfigurationException {
         TableHolder excelHolder = new ExcelTableHolder();
-        XmlFileHandler firstXmlHandler = new XmlFileHandler(xmlFiles.get(0));
+        KeyValueFileHandler firstXmlHandler = FileHandlerFactory.createHandler(files.get(0), fileType);
         List<String> keyList = firstXmlHandler.getKeyList();
         excelHolder.setColumn("string_id", keyList, 0);
-        for (int i = 0; i < xmlFiles.size(); i++) {
-            File file = xmlFiles.get(i);
-            KeyValueFileHandler xmlHandler = new XmlFileHandler(file);
+        for (int i = 0; i < files.size(); i++) {
+            String file = files.get(i);
+            KeyValueFileHandler xmlHandler = FileHandlerFactory.createHandler(file, fileType);
             Map<String, String> kvMap = xmlHandler.getKeyValueMap();
-            excelHolder.addColumn(file.getName(), kvMap, 0);
+//            System.out.println(kvMap);
+            excelHolder.addColumn(filesName.get(i), kvMap, 0);
         }
         excelHolder.write(excelOutputStream);
+    }
+
+    public void manyOtherToOneExcelFile(List<File> files, FileType fileType, OutputStream excelOutputStream) throws IOException, SAXException, ParserConfigurationException {
+        List<String> listString = new ArrayList<>();
+        List<String> listName = new ArrayList<>();
+        for (File file : files) {
+            String str = new String(Files.readAllBytes(file.toPath()));
+            listString.add(str);
+            listName.add(file.getName());
+        }
+        manyOtherToOneExcelFile(listString, listName, fileType, excelOutputStream);
+    }
+
+    public void manyXmlToOneExcelFile(List<File> files, OutputStream excelOutputStream) throws IOException, SAXException, ParserConfigurationException {
+        manyOtherToOneExcelFile(files, FileType.xml, excelOutputStream);
     }
 
     public ByteArrayOutputStream excelToOtherZip(TableHolder tableHolder, String template, String stringPrefix, String stringSuffix, Escaper escaper, String outputFileNamePrefix) throws IOException, InvalidFormatException {
@@ -109,18 +90,20 @@ public class FileConvertService {
         return ret;
     }
 
-    public ByteArrayOutputStream excelToOtherZip(List<TableHolder> tableHolders, String template, String stringPrefix, String stringSuffix, Escaper escaper, String outputFileNamePrefix, Set<String> languageLimit) throws IOException, InvalidFormatException {
+    public ByteArrayOutputStream excelToOtherZip(List<TableHolder> tableHolders, String template, String stringPrefix, String stringSuffix, Escaper escaper, String outputFileNamePrefix, Set<String> languageLimit) throws IOException, InvalidFormatException, ParserConfigurationException, SAXException {
         TableHolder tableHolder = null;
-        if (tableHolders != null && tableHolders.size() != 0)
+        if (tableHolders != null && tableHolders.size() != 0) {
             tableHolder = tableHolders.get(0);
-        else tableHolder = new ExcelTableHolder();
-        for (int i = 1; i < tableHolders.size(); i++)
-            tableHolder.merge(tableHolders.get(i));
+            for (int i = 1; i < tableHolders.size(); i++)
+                tableHolder.merge(tableHolders.get(i));
+        } else tableHolder = new ExcelTableHolder();
+
+        fitRowTitleToTemplate(tableHolder,template,escaper.getFileType());
         Map<String, String> textMap = excelToOthersMap(tableHolder, template, stringPrefix, stringSuffix, escaper, languageLimit);
 
         ByteArrayOutputStream bo = new ByteArrayOutputStream();
         ZipOutputStream zipOut = new ZipOutputStream(bo);
-        mapToZip(zipOut,textMap, outputFileNamePrefix, "." + escaper.getFileExtension(), languageLimit);
+        mapToZip(zipOut, textMap, outputFileNamePrefix, "." + escaper.getFileExtension(), languageLimit);
 
         zipOut.putNextEntry(new ZipEntry("merged.xls"));
         tableHolder.write(zipOut);
@@ -129,8 +112,8 @@ public class FileConvertService {
         return bo;
     }
 
-    public ByteArrayOutputStream excelToOtherZip(List<TableHolder> tableHolders, String template, String stringPrefix, String stringSuffix, FileType escapeType, String outputFileNamePrefix, Set<String> languageLimit) throws IOException, InvalidFormatException {
-        Escaper escaper = getEscaper(escapeType);
+    public ByteArrayOutputStream excelToOtherZip(List<TableHolder> tableHolders, String template, String stringPrefix, String stringSuffix, FileType escapeType, String outputFileNamePrefix, Set<String> languageLimit) throws IOException, InvalidFormatException, ParserConfigurationException, SAXException {
+        Escaper escaper = EscaperFactory.getEscaper(escapeType);
         return excelToOtherZip(tableHolders, template, stringPrefix, stringSuffix, escaper, outputFileNamePrefix, languageLimit);
     }
 
@@ -152,10 +135,10 @@ public class FileConvertService {
         }
     }
 
-        public ByteArrayOutputStream mapToZip(Map<String, String> textMap, String outputFileNamePrefix, String outputFileNameSuffix, Set<String> keyLimit) throws IOException, InvalidFormatException {
+    public ByteArrayOutputStream mapToZip(Map<String, String> textMap, String outputFileNamePrefix, String outputFileNameSuffix, Set<String> keyLimit) throws IOException, InvalidFormatException {
         ByteArrayOutputStream bo = new ByteArrayOutputStream();
         ZipOutputStream zipOut = new ZipOutputStream(bo);
-        mapToZip(zipOut,textMap,outputFileNamePrefix,outputFileNameSuffix,keyLimit);
+        mapToZip(zipOut, textMap, outputFileNamePrefix, outputFileNameSuffix, keyLimit);
         zipOut.close();
         return bo;
     }
@@ -176,10 +159,50 @@ public class FileConvertService {
         return ret;
     }
 
-    public void ManyXmlToOneExcelFile(ZipInputStream zipInputStream, OutputStream excelOutputStream) throws IOException, SAXException, ParserConfigurationException {
-        ZipEntry entry;
-        while ((entry = zipInputStream.getNextEntry()) != null) {
-            //TODO
+    private String faker(String str) {
+        return str.replaceAll("[　*| *| *|//s*]*", "").toLowerCase();
+    }
+
+    public void fitRowTitleToTemplate(TableHolder tableHolder, String template, FileType templateType) throws ParserConfigurationException, SAXException, IOException {
+        List<String> rowTitles = tableHolder.getColStringWithOutFirstRow(0);
+        List<String> fakeRowTitles = new ArrayList<>(rowTitles);
+        for (int i = 0; i < fakeRowTitles.size(); i++) {
+            String s = fakeRowTitles.get(i);
+            s = faker(s);
+            fakeRowTitles.set(i, s);
         }
+        System.out.println(rowTitles);
+        System.out.println(fakeRowTitles);
+        Map<String, Integer> strIndexMap = new HashMap<>();
+        Map<String, Integer> fakeMap = new HashMap<>();
+        for (int i = 0; i < rowTitles.size(); i++) {
+            strIndexMap.put(rowTitles.get(i), i);
+            String fakeTitle = fakeRowTitles.get(i);
+            if (fakeMap.containsKey(fakeTitle)) {
+                System.out.println("fake title repeat! I will only handle the first, won't add " + i + " : " + rowTitles.get(i));
+                Integer repeatIndex = fakeMap.get(fakeTitle);
+                System.out.println(repeatIndex + " : " + rowTitles.get(repeatIndex));
+                System.out.println(i + " : " + rowTitles.get(i));
+            } else
+                fakeMap.put(fakeRowTitles.get(i), i);
+        }
+
+        KeyValueFileHandler templateHandler = FileHandlerFactory.createHandler(template, templateType);
+        List<String> templateTitles = new ArrayList<>(templateHandler.getKeyValueMap().values());
+
+        for (String title : templateTitles) {
+            if (strIndexMap.containsKey(title)) continue;
+            String fakeTitle = faker(title);
+            if (fakeMap.containsKey(fakeTitle)) {
+                Integer index = fakeMap.get(fakeTitle);
+                System.out.println("can't find a sentence in excel but find one without space and lowercase. I will change the title in excel to fit template");
+                System.out.println("excel: " + rowTitles.get(index));
+                System.out.println("templ: " + title);
+                rowTitles.set(index, title);
+            } else {
+                //the sentence in template didn't found in excel
+            }
+        }
+        tableHolder.setColumn(null, rowTitles, 0);
     }
 }

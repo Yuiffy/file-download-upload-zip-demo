@@ -13,26 +13,34 @@ import javax.xml.transform.OutputKeys;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.File;
-import java.io.IOException;
-import java.io.StringWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Created by yuiff on 2017/1/6.
+ * Created by yuiff on 2017/2/9.
  */
 public class XmlFileHandler implements KeyValueFileHandler {
-    Map<String,Integer> keyItemIdMap;
-    Document doc;
-    NodeList stringList;
+    private Map<String, Integer> keyItemIdMap;
+    private Document doc;
+    private NodeList stringList;
+
     //<string name="xxxname">XXXXXXXXXXXX</string>
     public XmlFileHandler(File file) throws ParserConfigurationException, IOException, SAXException {
+        this(new FileInputStream(file));
+    }
+
+    public XmlFileHandler(String xmlString) throws ParserConfigurationException, IOException, SAXException {
+        this(new ByteArrayInputStream(xmlString.getBytes()));
+    }
+
+
+    public XmlFileHandler(InputStream inputStream) throws ParserConfigurationException, IOException, SAXException {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         DocumentBuilder db = dbf.newDocumentBuilder();
-        doc = db.parse(file);
+        doc = db.parse(inputStream);
         stringList = doc.getElementsByTagName("string");
 //        System.out.println("共有" + stringList.getLength() + "个string节点");
         keyItemIdMap = new HashMap<>();
@@ -42,7 +50,7 @@ public class XmlFileHandler implements KeyValueFileHandler {
             // System.out.println(stringNode.getParentNode());
             String name = ((Element) stringNode).getAttribute("name");
 //            String value = stringNode.getFirstChild().getNodeValue();
-            keyItemIdMap.put(name,i);
+            keyItemIdMap.put(name, i);
 //            System.out.println("name:" + name + "\tvalue:" + value);
         }
 

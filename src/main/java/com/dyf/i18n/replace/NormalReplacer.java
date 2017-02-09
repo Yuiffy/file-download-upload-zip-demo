@@ -1,6 +1,6 @@
 package com.dyf.i18n.replace;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;

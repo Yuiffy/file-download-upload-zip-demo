@@ -12,6 +12,13 @@ public class JsonFileHandler implements KeyValueFileHandler {
     JSONObject json;
     Map<String, JsonItemSaver> kvMap;
 
+    public JsonFileHandler(String jsonString) {
+        this.json = JSONObject.fromObject(jsonString);
+        this.kvMap = new HashMap<>();
+        dfsJson(json);
+    }
+
+
     private void dfsJson(JSONObject json) {
         dfsJSONObject("", json);
     }
@@ -32,9 +39,9 @@ public class JsonFileHandler implements KeyValueFileHandler {
             String key = entry.getKey();
             Object data = entry.getValue();
             if (data instanceof String) {
-                String fullKey = parent + ":" + data;
+                String fullKey = parent +"." + key;
                 kvMap.put(fullKey, new JsonObjectSaver(entry));
-                System.out.println(fullKey);
+//                System.out.println(fullKey);
             } else {
                 String childKey = parent.isEmpty() ? key : parent + "." + key;
                 dfsObject(childKey, data);
@@ -48,18 +55,11 @@ public class JsonFileHandler implements KeyValueFileHandler {
             if (data instanceof String) {
                 String fullKey = parent + '[' + i + ']';
                 kvMap.put(fullKey, new JsonArraySaver(json, i));
-                System.out.println(fullKey);
+//                System.out.println(fullKey);
             } else {
                 dfsObject(parent + '[' + i + ']', data);
             }
         }
-    }
-
-    public JsonFileHandler(String jsonString) {
-        this.json = JSONObject.fromObject(jsonString);
-        this.kvMap = new HashMap<>();
-        dfsJson(json);
-        dfsJson(json);
     }
 
     @Override
@@ -70,7 +70,7 @@ public class JsonFileHandler implements KeyValueFileHandler {
 
     @Override
     public Map<String, String> getKeyValueMap() {
-        Map<String,String> keyValueMap = new HashMap<>();
+        Map<String, String> keyValueMap = new HashMap<>();
         for (Map.Entry<String, JsonItemSaver> entry : this.kvMap.entrySet()) {
             keyValueMap.put(entry.getKey(), entry.getValue().get());
         }
@@ -102,7 +102,7 @@ public class JsonFileHandler implements KeyValueFileHandler {
 
         @Override
         public String get() {
-            return (String)inner.getValue();
+            return (String) inner.getValue();
         }
 
         @Override
