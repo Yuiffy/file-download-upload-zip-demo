@@ -12,6 +12,8 @@ public class EscaperFactory {
                 return new JsonEscaper();
             case xml:
                 return new XmlEscaper();
+            case dontEscape:
+                return new DontEscaper();
             default:
                 return new JsonEscaper();
         }

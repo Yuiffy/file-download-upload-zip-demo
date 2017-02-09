@@ -38,6 +38,8 @@ public class XmlFileHandler implements KeyValueFileHandler {
         keyItemIdMap = new HashMap<>();
         for (int i = 0; i < stringList.getLength(); i++) {
             Node stringNode = stringList.item(i);
+            //TODO:can add parentNode information to recognize 2 node in different place have same name.
+            // System.out.println(stringNode.getParentNode());
             String name = ((Element) stringNode).getAttribute("name");
 //            String value = stringNode.getFirstChild().getNodeValue();
             keyItemIdMap.put(name,i);

@@ -5,5 +5,6 @@ package com.dyf.i18n.util;
  */
 public enum FileType {
     json,
-    xml
+    xml,
+    dontEscape
 }

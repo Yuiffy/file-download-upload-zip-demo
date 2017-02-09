@@ -1,5 +1,7 @@
 package com.dyf.i18n;
 
+import com.dyf.i18n.file.JsonFileHandler;
+import com.dyf.i18n.file.KeyValueFileHandler;
 import com.dyf.i18n.service.FileConvertService;
 import com.dyf.i18n.table.ExcelTableHolder;
 import com.dyf.i18n.util.FileType;
@@ -18,9 +20,15 @@ public class MainExcelToOthers {
     public static void main(String[] args) throws Exception {
 //        excel2xmls();
 //            excel2jsons_map();
-        excel2jsons_map_limit_language();
+//        excel2jsons_map_limit_language();
+        jsonHand();
     }
 
+    public static void jsonHand() throws IOException {
+        final String templateFilenameString = "./workfiles/excel2others/templateinput/template.json";
+        String json = new String(Files.readAllBytes(Paths.get(templateFilenameString)));
+        KeyValueFileHandler handler = new JsonFileHandler(json);
+    }
     public static void excel2jsons_map() throws IOException, InvalidFormatException {
         final String excelDirString = "./workfiles/excel2others/excelinput/";
         final String templateFilenameString = "./workfiles/excel2others/templateinput/template.json";

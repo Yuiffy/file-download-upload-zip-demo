@@ -4,9 +4,7 @@ import com.dyf.i18n.util.ListStringUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by yuiff on 2017/1/3.
@@ -61,11 +59,28 @@ public abstract class AbstractTableHolder implements TableHolder {
     public abstract void write(OutputStream outputStream) throws IOException;
 
     @Override
+    public abstract void addRow(String rowTitle, List<String> row);
+
+    private void rowTitleMerge(TableHolder other){
+        List<String> myRowTitles = getColStringWithOutFirstRow(0);
+        List<String> otherRowTitles = other.getColStringWithOutFirstRow(0);
+        Set<String> myRowTitlesSet = new HashSet(myRowTitles);
+        for(String otherRowTitle:otherRowTitles){
+            if(!myRowTitles.contains(otherRowTitle)){
+                System.out.println(this + " excel have not the row:\"" + otherRowTitle + "\", so add the row to it.");
+                addRow(otherRowTitle,null);
+            }
+        }
+    }
+
+    @Override
     public void merge(TableHolder other) {
-        List<String> titles = other.getFirstRowString();
-        for (int i = 1; i < titles.size(); i++) {
+        rowTitleMerge(other);
+
+        List<String> otherTitles = other.getFirstRowString();
+        for (int i = 1; i < otherTitles.size(); i++) {
             Map<String, String> kvMap = other.getKeyValueMapByTwoCol(0, i);
-            this.addColumn(titles.get(i), kvMap, 0);
+            this.addColumn(otherTitles.get(i), kvMap, 0);
         }
     }
 }

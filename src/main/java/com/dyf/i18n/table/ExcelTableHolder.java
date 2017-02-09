@@ -56,10 +56,12 @@ public class ExcelTableHolder extends AbstractTableHolder implements TableHolder
     @Override
     public List<String> getColStringWithOutFirstRow(int colnum) {
         List<String> list = new ArrayList<>();
-        int siz = sheet.getPhysicalNumberOfRows();
+        int siz = sheet.getLastRowNum();
         for (int i = 1; i < siz; i++) {
             Row row = sheet.getRow(i);
+            if (row == null) continue;
             Cell cell = row.getCell(colnum);
+            String value = cell == null ? "" : cell.toString();
             list.add(cell.toString());
         }
         return list;
@@ -101,5 +103,17 @@ public class ExcelTableHolder extends AbstractTableHolder implements TableHolder
     @Override
     public void write(OutputStream outputStream) throws IOException {
         workbook.write(outputStream);
+    }
+
+    @Override
+    public void addRow(String rowTitle, List<String> row) {
+        Row newRow = sheet.createRow(sheet.getLastRowNum());
+        newRow.createCell(0).setCellValue(rowTitle);
+        if (row != null) {
+            for (int i = 0; i < row.size(); i++) {
+                int cellNum = i + 1;
+                newRow.createCell(cellNum).setCellValue(row.get(i));
+            }
+        }
     }
 }
