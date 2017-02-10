@@ -6,7 +6,7 @@
 </div>
 <div><p>文件类型影响转义。前缀后缀是用来防止替换到文本内容以外的东西，json的一般都是双引号，xml的一般是“>”和“&lt;”。</p></div>
 <div>
-    <form method="POST" enctype="multipart/form-data" action="/i18n/multiexcel.zip">
+    <form method="POST" enctype="multipart/form-data" action="/i18n/multiexcel.zip" target="_blank">
         <table>
             <tr>
                 <td>Excel(xls) to upload:</td>
@@ -17,9 +17,20 @@
                 <td><input type="file" name="file2"/></td>
             </tr>
             <tr>
+                <td>escape type:</td>
+                <td>
+                    <select name="escapeType">
+                        <option th:each="state : ${T(com.dyf.i18n.util.FileType).values()}"
+                                th:value="${state}"
+                                th:text="${state}">
+                        </option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
                 <td>template file type:</td>
                 <td>
-                    <select name="fileType">
+                    <select name="templateType">
                         <option th:each="state : ${T(com.dyf.i18n.util.FileType).values()}"
                                 th:value="${state}"
                                 th:text="${state}">

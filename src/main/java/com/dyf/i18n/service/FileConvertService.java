@@ -8,6 +8,7 @@ import com.dyf.i18n.replace.template.NormalTemplateHolder;
 import com.dyf.i18n.replace.template.TemplateHolder;
 import com.dyf.i18n.table.ExcelTableHolder;
 import com.dyf.i18n.table.TableHolder;
+import com.dyf.i18n.table.TableHolderUtils;
 import com.dyf.i18n.util.FileType;
 import com.dyf.i18n.util.escaper.Escaper;
 import com.dyf.i18n.util.escaper.EscaperFactory;
@@ -90,31 +91,64 @@ public class FileConvertService {
         return ret;
     }
 
-    public ByteArrayOutputStream excelToOtherZip(List<TableHolder> tableHolders, String template, String stringPrefix, String stringSuffix, Escaper escaper, String outputFileNamePrefix, Set<String> languageLimit) throws IOException, InvalidFormatException, ParserConfigurationException, SAXException {
-        TableHolder tableHolder = null;
-        if (tableHolders != null && tableHolders.size() != 0) {
-            tableHolder = tableHolders.get(0);
-            for (int i = 1; i < tableHolders.size(); i++)
-                tableHolder.merge(tableHolders.get(i));
-        } else tableHolder = new ExcelTableHolder();
+    public ByteArrayOutputStream excelToOtherZip(List<TableHolder> tableHolders, String template, String stringPrefix, String stringSuffix, Escaper escaper, FileType templateFileType, String outputFileNamePrefix, Set<String> languageLimit) throws IOException, InvalidFormatException, ParserConfigurationException, SAXException {
+        TableHolder tableHolder = TableHolderUtils.mergeAll(tableHolders);
 
-        fitRowTitleToTemplate(tableHolder,template,escaper.getFileType());
+        List<String> tableHaveNotList = new ArrayList<>();
+        Map<String,String> titleChangeLog = new HashMap<>();
+        fitRowTitleToTemplate(tableHolder, template, templateFileType,tableHaveNotList, titleChangeLog);
+
         Map<String, String> textMap = excelToOthersMap(tableHolder, template, stringPrefix, stringSuffix, escaper, languageLimit);
 
         ByteArrayOutputStream bo = new ByteArrayOutputStream();
         ZipOutputStream zipOut = new ZipOutputStream(bo);
         mapToZip(zipOut, textMap, outputFileNamePrefix, "." + escaper.getFileExtension(), languageLimit);
 
-        zipOut.putNextEntry(new ZipEntry("merged.xls"));
+        zipOut.putNextEntry(new ZipEntry("table_merged.xls"));
         tableHolder.write(zipOut);
         zipOut.closeEntry();
+
+        TableHolder tableHaveNot = new ExcelTableHolder();
+        tableHaveNot.setColumn("-", tableHaveNotList, 0);
+        zipOut.putNextEntry(new ZipEntry("table_have_not_sentences_of_template.xls"));
+        tableHaveNot.write(zipOut);
+        zipOut.closeEntry();
+
+        TableHolder tableTitleChange = new ExcelTableHolder();
+        tableTitleChange.setColumn("error",new ArrayList<String>(titleChangeLog.keySet()),0);
+        tableTitleChange.addColumn("template",titleChangeLog,0);
+        zipOut.putNextEntry(new ZipEntry("table_english_different_between_table_and_template.xls"));
+        tableTitleChange.write(zipOut);
+        zipOut.closeEntry();
+
+        TableHolder someLanguageHaveNot = getLanguageNotTranslate(tableHolder);
+        zipOut.putNextEntry(new ZipEntry("table_sentence_some_language_not_translated.xls"));
+        someLanguageHaveNot.write(zipOut);
+        zipOut.closeEntry();
+
         zipOut.close();
         return bo;
     }
 
-    public ByteArrayOutputStream excelToOtherZip(List<TableHolder> tableHolders, String template, String stringPrefix, String stringSuffix, FileType escapeType, String outputFileNamePrefix, Set<String> languageLimit) throws IOException, InvalidFormatException, ParserConfigurationException, SAXException {
+    public TableHolder getLanguageNotTranslate(TableHolder tableHolder) {
+        TableHolder ret = new ExcelTableHolder();
+        ret.addRow(tableHolder.getFirstRowString());
+        List<String> firstColumn = tableHolder.getColStringWithOutFirstRow(0);
+        for (int i = 0; i < firstColumn.size(); i++) {
+            List<String> row = tableHolder.getRowString(1 + i);
+            for (String str : row) {
+                if (str == null || str.isEmpty()) {
+                    ret.addRow(row);
+                    break;
+                }
+            }
+        }
+        return ret;
+    }
+
+    public ByteArrayOutputStream excelToOtherZip(List<TableHolder> tableHolders, String template, String stringPrefix, String stringSuffix, FileType escapeType, FileType templateFitType, String outputFileNamePrefix, Set<String> languageLimit) throws IOException, InvalidFormatException, ParserConfigurationException, SAXException {
         Escaper escaper = EscaperFactory.getEscaper(escapeType);
-        return excelToOtherZip(tableHolders, template, stringPrefix, stringSuffix, escaper, outputFileNamePrefix, languageLimit);
+        return excelToOtherZip(tableHolders, template, stringPrefix, stringSuffix, escaper, templateFitType, outputFileNamePrefix, languageLimit);
     }
 
     public void mapToZip(ZipOutputStream zipOut, Map<String, String> textMap, String outputFileNamePrefix, String outputFileNameSuffix, Set<String> keyLimit) throws IOException, InvalidFormatException {
@@ -122,9 +156,11 @@ public class FileConvertService {
         for (Map.Entry<String, String> entry : textMap.entrySet()) {
             String lang = entry.getKey();
             String outputFileName = outputFileNamePrefix + lang + outputFileNameSuffix;
-            if (nameSet.contains(outputFileName)) {
-                System.out.println("Duplicate file will not output, name:" + outputFileName);
-                continue;
+            Integer aNumber = 0;
+            while (nameSet.contains(outputFileName)) {
+                System.out.println("Duplicate file will not output,we will change the name:" + outputFileName);
+                outputFileName = outputFileNamePrefix + lang + aNumber.toString() + outputFileNameSuffix;
+                aNumber++;
             }
             nameSet.add(outputFileName);
             String outputString = entry.getValue();
@@ -164,6 +200,10 @@ public class FileConvertService {
     }
 
     public void fitRowTitleToTemplate(TableHolder tableHolder, String template, FileType templateType) throws ParserConfigurationException, SAXException, IOException {
+        fitRowTitleToTemplate(tableHolder, template, templateType, null,null);
+    }
+
+    public void fitRowTitleToTemplate(TableHolder tableHolder, String template, FileType templateType, List<String> excelHaveNotList, Map<String, String> titleChangeLog) throws ParserConfigurationException, SAXException, IOException {
         List<String> rowTitles = tableHolder.getColStringWithOutFirstRow(0);
         List<String> fakeRowTitles = new ArrayList<>(rowTitles);
         for (int i = 0; i < fakeRowTitles.size(); i++) {
@@ -171,38 +211,41 @@ public class FileConvertService {
             s = faker(s);
             fakeRowTitles.set(i, s);
         }
-        System.out.println(rowTitles);
-        System.out.println(fakeRowTitles);
         Map<String, Integer> strIndexMap = new HashMap<>();
         Map<String, Integer> fakeMap = new HashMap<>();
         for (int i = 0; i < rowTitles.size(); i++) {
             strIndexMap.put(rowTitles.get(i), i);
             String fakeTitle = fakeRowTitles.get(i);
             if (fakeMap.containsKey(fakeTitle)) {
-                System.out.println("fake title repeat! I will only handle the first, won't add " + i + " : " + rowTitles.get(i));
                 Integer repeatIndex = fakeMap.get(fakeTitle);
-                System.out.println(repeatIndex + " : " + rowTitles.get(repeatIndex));
-                System.out.println(i + " : " + rowTitles.get(i));
+                System.out.println("fake title repeat! I will only handle the first, won't add " + i + " : " + rowTitles.get(i) +
+                        "\t" + repeatIndex + " : " + rowTitles.get(repeatIndex));
             } else
                 fakeMap.put(fakeRowTitles.get(i), i);
         }
 
         KeyValueFileHandler templateHandler = FileHandlerFactory.createHandler(template, templateType);
         List<String> templateTitles = new ArrayList<>(templateHandler.getKeyValueMap().values());
-
+        Set<String> excelHaveNotSet = new HashSet<>();
+        Map<String, String> tempTitleChangeLog = new HashMap<>();
         for (String title : templateTitles) {
             if (strIndexMap.containsKey(title)) continue;
             String fakeTitle = faker(title);
             if (fakeMap.containsKey(fakeTitle)) {
                 Integer index = fakeMap.get(fakeTitle);
+                String realTitle = rowTitles.get(index);
                 System.out.println("can't find a sentence in excel but find one without space and lowercase. I will change the title in excel to fit template");
-                System.out.println("excel: " + rowTitles.get(index));
+                System.out.println("excel: " + realTitle);
                 System.out.println("templ: " + title);
+                tempTitleChangeLog.put(realTitle, title);
                 rowTitles.set(index, title);
             } else {
                 //the sentence in template didn't found in excel
+                excelHaveNotSet.add(title);
             }
         }
         tableHolder.setColumn(null, rowTitles, 0);
+        if (excelHaveNotList != null) excelHaveNotList.addAll(excelHaveNotSet);
+        if (titleChangeLog != null) titleChangeLog.putAll(tempTitleChangeLog);
     }
 }

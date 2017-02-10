@@ -11,7 +11,9 @@ import java.util.*;
  */
 public abstract class AbstractTableHolder implements TableHolder {
     @Override
-    public abstract List<String> getFirstRowString();
+    public List<String> getFirstRowString(){
+        return getRowString(0);
+    }
 
     /**
      * with out first row
@@ -59,16 +61,19 @@ public abstract class AbstractTableHolder implements TableHolder {
     public abstract void write(OutputStream outputStream) throws IOException;
 
     @Override
-    public abstract void addRow(String rowTitle, List<String> row);
+    public abstract void addRow(List<String> row);
 
     private void rowTitleMerge(TableHolder other){
-        List<String> myRowTitles = getColStringWithOutFirstRow(0);
+        List<String> myRowTitles = this.getColStringWithOutFirstRow(0);
         List<String> otherRowTitles = other.getColStringWithOutFirstRow(0);
         Set<String> myRowTitlesSet = new HashSet(myRowTitles);
         for(String otherRowTitle:otherRowTitles){
-            if(!myRowTitles.contains(otherRowTitle)){
+            if(!myRowTitlesSet.contains(otherRowTitle)){
                 System.out.println(this + " excel have not the row:\"" + otherRowTitle + "\", so add the row to it.");
-                addRow(otherRowTitle,null);
+                List<String> newRow = new ArrayList<>();
+                newRow.add(otherRowTitle);
+                this.addRow(newRow);
+                myRowTitlesSet.add(otherRowTitle);
             }
         }
     }
@@ -83,4 +88,7 @@ public abstract class AbstractTableHolder implements TableHolder {
             this.addColumn(otherTitles.get(i), kvMap, 0);
         }
     }
+
+    @Override
+    public abstract List<String> getRowString(int rowIndex);
 }

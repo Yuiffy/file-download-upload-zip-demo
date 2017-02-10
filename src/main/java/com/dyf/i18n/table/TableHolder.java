@@ -12,7 +12,7 @@ public interface TableHolder {
 
     List<String> getFirstRowString();
 
-    List<String> getColStringWithOutFirstRow(int colnum);
+    List<String> getColStringWithOutFirstRow(int colIndex);
 
     Map<String, String> getKeyValueMapByTwoCol(int keyColNum, int valueColNum, String prefix, String suffix);
 
@@ -20,7 +20,8 @@ public interface TableHolder {
 
     void addColumn(String columnTitle, Map<String, String> kvMap, int keyColNum);
     void setColumn(String columnTitle, List<String> column, int colNum);
-    void addRow(String rowTitle, List<String> row);
+    void addRow(List<String> row);
+    List<String> getRowString(int rowIndex);
     void write(OutputStream outputStream) throws IOException;
     void merge(TableHolder other);
 }

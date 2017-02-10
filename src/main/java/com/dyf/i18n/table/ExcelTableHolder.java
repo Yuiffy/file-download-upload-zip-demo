@@ -37,11 +37,11 @@ public class ExcelTableHolder extends AbstractTableHolder implements TableHolder
     }
 
     @Override
-    public List<String> getFirstRowString() {
-        Row firstRow = sheet.getRow(0);
+    public List<String> getRowString(int rowIndex) {
+        Row row = sheet.getRow(rowIndex);
         List<String> list = new ArrayList<>();
-        if (firstRow == null) return list;
-        for (Cell cell : firstRow) {
+        if (row == null) return list;
+        for (Cell cell : row) {
             list.add(cell.toString());
         }
         return list;
@@ -56,13 +56,13 @@ public class ExcelTableHolder extends AbstractTableHolder implements TableHolder
     @Override
     public List<String> getColStringWithOutFirstRow(int colnum) {
         List<String> list = new ArrayList<>();
-        int siz = sheet.getLastRowNum();
-        for (int i = 1; i < siz; i++) {
+        int lastIndex = sheet.getLastRowNum();
+        for (int i = 1; i <= lastIndex; i++) {
             Row row = sheet.getRow(i);
             if (row == null) continue;
             Cell cell = row.getCell(colnum);
-            String value = cell == null ? "" : cell.toString();
-            list.add(cell.toString());
+            String value = (cell == null) ? "" : cell.toString();
+            list.add(value);
         }
         return list;
     }
@@ -73,11 +73,16 @@ public class ExcelTableHolder extends AbstractTableHolder implements TableHolder
         int colNum = firstRow.getLastCellNum();
         Cell titleCell = firstRow.createCell(colNum);
         titleCell.setCellValue(columnTitle);
-        int last = sheet.getLastRowNum();
-        for (int i = 1; i <= last; i++) {
+        int lastRowIndex = sheet.getLastRowNum();
+        for (int i = 1; i <= lastRowIndex; i++) {
             Row row = sheet.getRow(i);
+            if (row==null || row.getCell(keyColNum) == null){
+                System.out.println("skip a empty row: "+i+" " +row+" ,<last = "+lastRowIndex);
+                continue;
+            }
             String key = row.getCell(keyColNum).getStringCellValue();
             String value = kvMap.get(key);
+//            if(!kvMap.containsKey(key)) System.out.println("can`t found the key:\""+key+"\" in language "+columnTitle);
             Cell newCell = row.createCell(colNum);
             newCell.setCellValue(value);
         }
@@ -106,13 +111,18 @@ public class ExcelTableHolder extends AbstractTableHolder implements TableHolder
     }
 
     @Override
-    public void addRow(String rowTitle, List<String> row) {
-        Row newRow = sheet.createRow(sheet.getLastRowNum());
-        newRow.createCell(0).setCellValue(rowTitle);
+    public void addRow(List<String> row) {
+        int lastRowIndex = sheet.getLastRowNum();
+        if (lastRowIndex == 0) {
+            if (sheet.getPhysicalNumberOfRows() == 0) lastRowIndex = -1;
+        }
+//        System.out.println("add Row! now lastRowIndex is "+lastRowIndex +" , I will add "+(lastRowIndex+1));
+        Row newRow = sheet.createRow(lastRowIndex + 1);
         if (row != null) {
             for (int i = 0; i < row.size(); i++) {
-                int cellNum = i + 1;
-                newRow.createCell(cellNum).setCellValue(row.get(i));
+                int cellNum = i;
+                String str = (row.get(i)!=null)?row.get(i):"";
+                newRow.createCell(cellNum).setCellValue(str);
             }
         }
     }
