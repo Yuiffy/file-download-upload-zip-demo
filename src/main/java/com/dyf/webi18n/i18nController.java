@@ -2,24 +2,20 @@ package com.dyf.webi18n;
 
 import com.dyf.download.FileUploadController;
 import com.dyf.download.storage.StorageService;
-import com.dyf.i18n.replace.template.NormalTemplateHolder;
-import com.dyf.i18n.replace.template.TemplateHolder;
 import com.dyf.i18n.service.FileConvertService;
 import com.dyf.i18n.table.ExcelTableHolder;
 import com.dyf.i18n.table.TableHolder;
 import com.dyf.i18n.util.FileType;
 import com.dyf.i18n.util.escaper.EscaperFactory;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import net.sf.json.JSONObject;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.util.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -27,7 +23,6 @@ import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -112,6 +107,9 @@ public class i18nController {
     public byte[] multiexcel2othersPost(MultipartFile[] files, MultipartFile file2, FileType escapeType,FileType templateType, String prefix, String suffix, String outfilePrefix,
                                         RedirectAttributes redirectAttributes) throws IOException, InvalidFormatException, ParserConfigurationException, SAXException {
         String template = new String(file2.getBytes());
+//        System.out.println("template:\n"+template);
+//        template = new XmlFileHandler(template).getString();
+//        System.out.println("template2:\n"+template);
 
         FileConvertService convertService = new FileConvertService();
         List<TableHolder> tableHolders = new ArrayList<>();
@@ -125,5 +123,53 @@ public class i18nController {
     @GetMapping("/xmls2excel")
     public String xmls2excel() {
         return "upload/xmls2excel";
+    }
+
+    @GetMapping("/simple")
+    public String testexcel2simplejson() {
+        return "upload/test/simple";
+    }
+
+    @PostMapping("/testexcel2simplejson.json")
+    @ResponseBody
+    public String testexcel2simplejson(MultipartFile excelFile) throws Exception {
+        JSONObject json = excelToSimpleJson(excelFile);
+        return json.toString(2);
+    }
+
+    public JSONObject excelToSimpleJson(MultipartFile excelFile) throws Exception {
+        JSONObject json = new JSONObject();
+        if (excelFile == null) {
+            json.put("msg", "FAIL!");
+            return json;
+        } else {
+            TableHolder tableHolder = new ExcelTableHolder(excelFile.getInputStream());
+            Map<String, Object> table = new HashMap<>();
+            for (Integer sheetCount = 0; sheetCount <= 0; sheetCount++) {
+                List<String> engStrings = tableHolder
+                        .getColStringWithOutFirstRow(0);
+                List<String> langs = tableHolder.getFirstRowString();
+                List<Map<String, String>> rows = new ArrayList<>();
+                for (int rowNum = 0; rowNum < engStrings.size(); rowNum++) {
+                    List<String> row = tableHolder.getRowString(1 + rowNum);
+                    Map<String, String> jsRow = new HashMap<>();
+                    jsRow.put("engstring", row.get(0));
+                    for (int i = 1; i < row.size(); i++) {
+                        jsRow.put(langs.get(i), row.get(i));
+                    }
+                    rows.add(jsRow);
+                }
+                Map<String,Object> thisSheet = new HashMap<>();
+                thisSheet.put("rows", rows);
+                thisSheet.put("language", langs.subList(1, langs.size()));
+                table.put("sheet" + sheetCount, thisSheet);
+            }
+
+            json.put("msg", "SUCC!");
+            json.put("data", table);
+            System.out.println("JSON! " + json.toString());
+        }
+
+        return json;
     }
 }

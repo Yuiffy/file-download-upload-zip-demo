@@ -1,5 +1,6 @@
 package com.dyf.i18n.file;
 
+import com.dyf.i18n.util.BOMUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -33,7 +34,7 @@ public class XmlFileHandler implements KeyValueFileHandler {
     }
 
     public XmlFileHandler(String xmlString) throws ParserConfigurationException, IOException, SAXException {
-        this(new ByteArrayInputStream(xmlString.getBytes()));
+        this(new ByteArrayInputStream(BOMUtils.removeUTF8BOM(xmlString).getBytes("UTF-8")));
     }
 
 
@@ -44,7 +45,9 @@ public class XmlFileHandler implements KeyValueFileHandler {
         stringList = doc.getElementsByTagName("string");
 //        System.out.println("共有" + stringList.getLength() + "个string节点");
         keyItemIdMap = new HashMap<>();
+    	System.out.println(stringList.getLength() + "?");
         for (int i = 0; i < stringList.getLength(); i++) {
+        	System.out.println(new Integer(i) + "!");
             Node stringNode = stringList.item(i);
             //TODO:can add parentNode information to recognize 2 node in different place have same name.
             // System.out.println(stringNode.getParentNode());

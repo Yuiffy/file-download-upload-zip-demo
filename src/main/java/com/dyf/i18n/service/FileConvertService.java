@@ -70,7 +70,7 @@ public class FileConvertService {
         List<String> listString = new ArrayList<>();
         List<String> listName = new ArrayList<>();
         for (File file : files) {
-            String str = new String(Files.readAllBytes(file.toPath()));
+            String str = new String(Files.readAllBytes(file.toPath()), ("UTF-8"));
             listString.add(str);
             listName.add(file.getName());
         }
@@ -95,8 +95,8 @@ public class FileConvertService {
         TableHolder tableHolder = TableHolderUtils.mergeAll(tableHolders);
 
         List<String> tableHaveNotList = new ArrayList<>();
-        Map<String,String> titleChangeLog = new HashMap<>();
-        fitRowTitleToTemplate(tableHolder, template, templateFileType,tableHaveNotList, titleChangeLog);
+        Map<String, String> titleChangeLog = new HashMap<>();
+        fitRowTitleToTemplate(tableHolder, template, templateFileType, tableHaveNotList, titleChangeLog);
 
         Map<String, String> textMap = excelToOthersMap(tableHolder, template, stringPrefix, stringSuffix, escaper, languageLimit);
 
@@ -115,8 +115,8 @@ public class FileConvertService {
         zipOut.closeEntry();
 
         TableHolder tableTitleChange = new ExcelTableHolder();
-        tableTitleChange.setColumn("error",new ArrayList<String>(titleChangeLog.keySet()),0);
-        tableTitleChange.addColumn("template",titleChangeLog,0);
+        tableTitleChange.setColumn("error", new ArrayList<String>(titleChangeLog.keySet()), 0);
+        tableTitleChange.addColumn("template", titleChangeLog, 0);
         zipOut.putNextEntry(new ZipEntry("table_english_different_between_table_and_template.xls"));
         tableTitleChange.write(zipOut);
         zipOut.closeEntry();
@@ -165,7 +165,7 @@ public class FileConvertService {
             nameSet.add(outputFileName);
             String outputString = entry.getValue();
             zipOut.putNextEntry(new ZipEntry(outputFileName));
-            zipOut.write(outputString.getBytes());
+            zipOut.write(outputString.getBytes("UTF-8"));  //这个地方一定要加字符集，因为getBytes字符集是根据系统而定的，这里必须写死
             zipOut.closeEntry();
             System.out.println("zip File finish:" + outputFileName);
         }
@@ -200,7 +200,7 @@ public class FileConvertService {
     }
 
     public void fitRowTitleToTemplate(TableHolder tableHolder, String template, FileType templateType) throws ParserConfigurationException, SAXException, IOException {
-        fitRowTitleToTemplate(tableHolder, template, templateType, null,null);
+        fitRowTitleToTemplate(tableHolder, template, templateType, null, null);
     }
 
     public void fitRowTitleToTemplate(TableHolder tableHolder, String template, FileType templateType, List<String> excelHaveNotList, Map<String, String> titleChangeLog) throws ParserConfigurationException, SAXException, IOException {
@@ -247,5 +247,30 @@ public class FileConvertService {
         tableHolder.setColumn(null, rowTitles, 0);
         if (excelHaveNotList != null) excelHaveNotList.addAll(excelHaveNotSet);
         if (titleChangeLog != null) titleChangeLog.putAll(tempTitleChangeLog);
+    }
+
+    public ByteArrayOutputStream buildTable(TableHolder tableHolder, Set<String> colNameSet, List<Map<String, String>> cellMapList) throws IOException {
+        List<String> colNames = new ArrayList<String>(colNameSet);
+        Map<String, Integer> nameIndexMap = new HashMap<>();
+        for (Integer i = 0; i < colNames.size(); i++) {
+            nameIndexMap.put(colNames.get(i), i);
+        }
+
+        tableHolder.addRow(colNames);
+
+        for (Map<String, String> colCellMap : cellMapList) {
+            List<String> row = new ArrayList<>(colNames.size());
+            for (Map.Entry<String, String> entry : colCellMap.entrySet()) {
+                String colName = entry.getKey();
+                Integer colIndex = nameIndexMap.get(nameIndexMap);
+                String CellValue = entry.getValue();
+                row.set(colIndex, CellValue);
+            }
+            tableHolder.addRow(row);
+        }
+
+        ByteArrayOutputStream bo = new ByteArrayOutputStream();
+        tableHolder.write(bo);
+        return bo;
     }
 }
