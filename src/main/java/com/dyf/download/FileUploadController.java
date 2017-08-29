@@ -43,18 +43,18 @@ public class FileUploadController {
                 .loadAll();
         List<String> urls = new ArrayList<>(paths.size());
         List<String> names = new ArrayList<>(paths.size());
-        for(Path path:paths){
+        for (Path path : paths) {
             urls.add(MvcUriComponentsBuilder
                     .fromMethodName(FileUploadController.class, "serveFile", path.getFileName().toString())
                     .build().encode().toString());
             names.add(path.getFileName().toString());
         }
 
-        List fileAndNames = new ArrayList<Map<String,String>>(urls.size());
-        for(int i=0; i<urls.size(); i++){
-            Map<String,String> mp = new HashMap<>();
-            mp.put("url",(String)urls.get(i));
-            mp.put("name",(String)names.get(i));
+        List fileAndNames = new ArrayList<Map<String, String>>(urls.size());
+        for (int i = 0; i < urls.size(); i++) {
+            Map<String, String> mp = new HashMap<>();
+            mp.put("url", (String) urls.get(i));
+            mp.put("name", (String) names.get(i));
             fileAndNames.add(mp);
         }
         model.addAttribute("files", fileAndNames);

@@ -1,4 +1,5 @@
 package com.dyf.i18n.file;
+
 import java.util.List;
 import java.util.Map;
 
@@ -7,7 +8,10 @@ import java.util.Map;
  */
 public interface KeyValueFileHandler {
     List<String> getKeyList();
-    Map<String,String> getKeyValueMap();
+
+    Map<String, String> getKeyValueMap();
+
     void put(String key, String value);
+
     String getString();
 }

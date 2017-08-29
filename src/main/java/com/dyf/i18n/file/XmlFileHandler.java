@@ -45,9 +45,8 @@ public class XmlFileHandler implements KeyValueFileHandler {
         stringList = doc.getElementsByTagName("string");
 //        System.out.println("共有" + stringList.getLength() + "个string节点");
         keyItemIdMap = new HashMap<>();
-    	System.out.println(stringList.getLength() + "?");
         for (int i = 0; i < stringList.getLength(); i++) {
-        	System.out.println(new Integer(i) + "!");
+//        	System.out.println(new Integer(i) + "!");
             Node stringNode = stringList.item(i);
             //TODO:can add parentNode information to recognize 2 node in different place have same name.
             // System.out.println(stringNode.getParentNode());

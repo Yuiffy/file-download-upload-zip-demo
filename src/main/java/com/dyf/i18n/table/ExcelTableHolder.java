@@ -76,8 +76,8 @@ public class ExcelTableHolder extends AbstractTableHolder implements TableHolder
         int lastRowIndex = sheet.getLastRowNum();
         for (int i = 1; i <= lastRowIndex; i++) {
             Row row = sheet.getRow(i);
-            if (row==null || row.getCell(keyColNum) == null){
-                System.out.println("skip a empty row: "+i+" " +row+" ,<last = "+lastRowIndex);
+            if (row == null || row.getCell(keyColNum) == null) {
+                System.out.println("skip a empty row: " + i + " " + row + " ,<last = " + lastRowIndex);
                 continue;
             }
             String key = row.getCell(keyColNum).getStringCellValue();
@@ -121,7 +121,7 @@ public class ExcelTableHolder extends AbstractTableHolder implements TableHolder
         if (row != null) {
             for (int i = 0; i < row.size(); i++) {
                 int cellNum = i;
-                String str = (row.get(i)!=null)?row.get(i):"";
+                String str = (row.get(i) != null) ? row.get(i) : "";
                 newRow.createCell(cellNum).setCellValue(str);
             }
         }

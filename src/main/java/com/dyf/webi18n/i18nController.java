@@ -3,6 +3,7 @@ package com.dyf.webi18n;
 import com.dyf.download.FileUploadController;
 import com.dyf.download.storage.StorageService;
 import com.dyf.i18n.service.FileConvertService;
+import com.dyf.i18n.service.TableMergeService;
 import com.dyf.i18n.table.ExcelTableHolder;
 import com.dyf.i18n.table.TableHolder;
 import com.dyf.i18n.util.FileType;
@@ -104,7 +105,7 @@ public class i18nController {
 
     @PostMapping("/multiexcel.zip")
     @ResponseBody
-    public byte[] multiexcel2othersPost(MultipartFile[] files, MultipartFile file2, FileType escapeType,FileType templateType, String prefix, String suffix, String outfilePrefix,
+    public byte[] multiexcel2othersPost(MultipartFile[] files, MultipartFile file2, FileType escapeType, FileType templateType, String prefix, String suffix, String outfilePrefix,
                                         RedirectAttributes redirectAttributes) throws IOException, InvalidFormatException, ParserConfigurationException, SAXException {
         String template = new String(file2.getBytes());
 //        System.out.println("template:\n"+template);
@@ -115,7 +116,7 @@ public class i18nController {
         List<TableHolder> tableHolders = new ArrayList<>();
         for (int i = 0; i < files.length; i++)
             tableHolders.add(new ExcelTableHolder(files[i].getInputStream()));
-        ByteArrayOutputStream out = convertService.excelToOtherZip(tableHolders, template, prefix, suffix, EscaperFactory.getEscaper(escapeType),templateType, outfilePrefix, null);
+        ByteArrayOutputStream out = convertService.excelToOtherZip(tableHolders, template, prefix, suffix, EscaperFactory.getEscaper(escapeType), templateType, outfilePrefix, null);
 
         return out.toByteArray();
     }
@@ -159,7 +160,7 @@ public class i18nController {
                     }
                     rows.add(jsRow);
                 }
-                Map<String,Object> thisSheet = new HashMap<>();
+                Map<String, Object> thisSheet = new HashMap<>();
                 thisSheet.put("rows", rows);
                 thisSheet.put("language", langs.subList(1, langs.size()));
                 table.put("sheet" + sheetCount, thisSheet);
@@ -171,5 +172,30 @@ public class i18nController {
         }
 
         return json;
+    }
+
+
+    @GetMapping("/excelmerge")
+    public String excelMerge() {
+        return "upload/excelMerge";
+    }
+
+    @PostMapping("/excelmerge.zip")
+    @ResponseBody
+    public byte[] excelMergePost(MultipartFile file1, MultipartFile file2, FileType escapeType, FileType templateType, String prefix, String suffix, String outfilePrefix,
+                                        RedirectAttributes redirectAttributes) throws IOException, InvalidFormatException, ParserConfigurationException, SAXException {
+        String template = new String(file2.getBytes());
+//        System.out.println("template:\n"+template);
+//        template = new XmlFileHandler(template).getString();
+//        System.out.println("template2:\n"+template);
+        TableHolder mainHolder = new ExcelTableHolder(file2.getInputStream());
+        TableHolder littleHolder = new ExcelTableHolder(file1.getInputStream());
+        TableMergeService service = new TableMergeService();
+//        List<TableHolder> tableHolders = new ArrayList<>();
+//        for (int i = 0; i < files.length; i++)
+//            tableHolders.add(new ExcelTableHolder(files[i].getInputStream()));
+//        ByteArrayOutputStream out = convertService.excelToOtherZip(tableHolders, template, prefix, suffix, EscaperFactory.getEscaper(escapeType), templateType, outfilePrefix, null);
+        ByteArrayOutputStream out = service.mergeLittleTableIntoMainTableZipWithTip(littleHolder, mainHolder);
+        return out.toByteArray();
     }
 }

@@ -10,8 +10,7 @@ import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
 @EnableConfigurationProperties(StorageProperties.class)
-public class App 
-{
+public class App {
     public static void main(String[] args) throws Exception {
         SpringApplication.run(App.class, args);
     }

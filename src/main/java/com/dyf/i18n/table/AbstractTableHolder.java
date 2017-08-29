@@ -11,7 +11,7 @@ import java.util.*;
  */
 public abstract class AbstractTableHolder implements TableHolder {
     @Override
-    public List<String> getFirstRowString(){
+    public List<String> getFirstRowString() {
         return getRowString(0);
     }
 
@@ -26,7 +26,6 @@ public abstract class AbstractTableHolder implements TableHolder {
 
     /**
      * with out first row
-     *
      */
     @Override
     public Map<String, String> getKeyValueMapByTwoCol(int keyColNum, int valueColNum, String prefix, String suffix) {
@@ -63,12 +62,12 @@ public abstract class AbstractTableHolder implements TableHolder {
     @Override
     public abstract void addRow(List<String> row);
 
-    private void rowTitleMerge(TableHolder other){
+    private void rowTitleMerge(TableHolder other) {
         List<String> myRowTitles = this.getColStringWithOutFirstRow(0);
         List<String> otherRowTitles = other.getColStringWithOutFirstRow(0);
         Set<String> myRowTitlesSet = new HashSet(myRowTitles);
-        for(String otherRowTitle:otherRowTitles){
-            if(!myRowTitlesSet.contains(otherRowTitle)){
+        for (String otherRowTitle : otherRowTitles) {
+            if (!myRowTitlesSet.contains(otherRowTitle)) {
                 System.out.println(this + " excel have not the row:\"" + otherRowTitle + "\", so add the row to it.");
                 List<String> newRow = new ArrayList<>();
                 newRow.add(otherRowTitle);

@@ -1,0 +1,27 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:if="${message}">
+    <h2 th:text="${message}"/>
+</div>
+<div><p>把小excel合并进主翻译表，根据excel第一列的英文原文和第一行的语言名称。</p></div>
+<div>
+    <form method="POST" enctype="multipart/form-data" action="/i18n/excelmerge.zip" target="_blank">
+        <table>
+            <tr>
+                <td>little Excel(xls) to upload:</td>
+                <td><input type="file" name="file1"/></td>
+            </tr>
+            <tr>
+                <td>main excel（主表） to upload:</td>
+                <td><input type="file" name="file2"/></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td><input type="submit" value="Upload"/></td>
+            </tr>
+        </table>
+    </form>
+</div>
+</body>
+</html>

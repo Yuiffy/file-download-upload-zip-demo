@@ -4,6 +4,7 @@ import com.dyf.i18n.file.FileHandlerFactory;
 import com.dyf.i18n.file.KeyValueFileHandler;
 import com.dyf.i18n.replace.NormalReplacer;
 import com.dyf.i18n.replace.Replacer;
+import com.dyf.i18n.replace.template.MultiPrefixTemplateHolder;
 import com.dyf.i18n.replace.template.NormalTemplateHolder;
 import com.dyf.i18n.replace.template.TemplateHolder;
 import com.dyf.i18n.table.ExcelTableHolder;
@@ -33,9 +34,16 @@ public class FileConvertService {
         return excelToOthersMap(tableHolder, template, stringPrefix, stringSuffix, escapeType, null);
     }
 
+    public Map<String, String> excelToOthersMap(TableHolder tableHolder, String template, String stringPrefix[], String stringSuffix[], FileType escapeType, Set<String> languageOnly) throws IOException, InvalidFormatException {
+        Escaper escaper = EscaperFactory.getEscaper(escapeType);
+        TemplateHolder templateHolder = new MultiPrefixTemplateHolder(tableHolder, escaper, template, stringPrefix, stringSuffix);
+        return excelToOthersMap(languageOnly, templateHolder);
+    }
+
     public Map<String, String> excelToOthersMap(TableHolder tableHolder, String template, String stringPrefix, String stringSuffix, FileType escapeType, Set<String> languageOnly) throws IOException, InvalidFormatException {
         Escaper escaper = EscaperFactory.getEscaper(escapeType);
-        return excelToOthersMap(tableHolder, template, stringPrefix, stringSuffix, escaper, languageOnly);
+        TemplateHolder templateHolder = new NormalTemplateHolder(tableHolder, escaper, template, stringPrefix, stringSuffix);
+        return excelToOthersMap(languageOnly, templateHolder);
     }
 
     public String getOutputFileName(String templateFilename, String outputDir, String lang) {
@@ -51,6 +59,7 @@ public class FileConvertService {
         return replacer.doReplace(template);
     }
 
+    // many language json/xml file, to one excel file with many columns, every column mean one language
     public void manyOtherToOneExcelFile(List<String> files, List<String> filesName, FileType fileType, OutputStream excelOutputStream) throws IOException, SAXException, ParserConfigurationException {
         TableHolder excelHolder = new ExcelTableHolder();
         KeyValueFileHandler firstXmlHandler = FileHandlerFactory.createHandler(files.get(0), fileType);
@@ -63,6 +72,24 @@ public class FileConvertService {
 //            System.out.println(kvMap);
             excelHolder.addColumn(filesName.get(i), kvMap, 0);
         }
+        excelHolder.write(excelOutputStream);
+    }
+
+    //many json/xml, get the translate values of them, list in the first column of excel
+    public void manyEnglishToOneExcelFile(List<String> files, String columnName, FileType fileType, OutputStream excelOutputStream) throws IOException, SAXException, ParserConfigurationException {
+        List<String> valueStringList = new ArrayList<>();
+        for (int i = 0; i < files.size(); i++) {
+            String file = files.get(i);
+            KeyValueFileHandler keyValueHandler = FileHandlerFactory.createHandler(file, fileType);
+            Map<String, String> kvMap = keyValueHandler.getKeyValueMap();
+            List<String> keyList = keyValueHandler.getKeyList();
+            List<String> valueList = new ArrayList<>();
+            for (String key : keyList) {
+                valueStringList.add(kvMap.get(key));
+            }
+        }
+        TableHolder excelHolder = new ExcelTableHolder();
+        excelHolder.setColumn(columnName, valueStringList, 0);
         excelHolder.write(excelOutputStream);
     }
 
@@ -86,19 +113,28 @@ public class FileConvertService {
     }
 
     public ByteArrayOutputStream excelToOtherZip(TableHolder tableHolder, String template, String stringPrefix, String stringSuffix, Escaper escaper, String outputFileNamePrefix, Set<String> languageLimit) throws IOException, InvalidFormatException {
-        Map<String, String> textMap = excelToOthersMap(tableHolder, template, stringPrefix, stringSuffix, escaper, languageLimit);
+        Map<String, String> textMap = excelToOthersMap(languageLimit, new NormalTemplateHolder(tableHolder, escaper, template, stringPrefix, stringSuffix));
         ByteArrayOutputStream ret = mapToZip(textMap, outputFileNamePrefix, "." + escaper.getFileExtension(), languageLimit);
         return ret;
     }
 
     public ByteArrayOutputStream excelToOtherZip(List<TableHolder> tableHolders, String template, String stringPrefix, String stringSuffix, Escaper escaper, FileType templateFileType, String outputFileNamePrefix, Set<String> languageLimit) throws IOException, InvalidFormatException, ParserConfigurationException, SAXException {
-        TableHolder tableHolder = TableHolderUtils.mergeAll(tableHolders);
+        return excelToOtherZip(tableHolders, template, new String[]{stringPrefix}, new String[]{stringSuffix},
+                escaper, templateFileType, outputFileNamePrefix, languageLimit);
+    }
 
+    public ByteArrayOutputStream excelToOtherZip(List<TableHolder> tableHolders, String template, String[] stringPrefix, String[] stringSuffix, Escaper escaper, FileType templateFileType, String outputFileNamePrefix, Set<String> languageLimit) throws IOException, InvalidFormatException, ParserConfigurationException, SAXException {
+        TableHolder tableHolder = TableHolderUtils.mergeAll(tableHolders);
+        TemplateHolder templateHolder = new MultiPrefixTemplateHolder(tableHolder, escaper, template, stringPrefix, stringSuffix);
+        return excelToOtherZip(tableHolder, template, escaper, templateFileType, outputFileNamePrefix, languageLimit, templateHolder);
+    }
+
+    public ByteArrayOutputStream excelToOtherZip(TableHolder tableHolder, String template, Escaper escaper, FileType templateFileType, String outputFileNamePrefix, Set<String> languageLimit, TemplateHolder templateHolder) throws IOException, InvalidFormatException, ParserConfigurationException, SAXException {
         List<String> tableHaveNotList = new ArrayList<>();
         Map<String, String> titleChangeLog = new HashMap<>();
         fitRowTitleToTemplate(tableHolder, template, templateFileType, tableHaveNotList, titleChangeLog);
 
-        Map<String, String> textMap = excelToOthersMap(tableHolder, template, stringPrefix, stringSuffix, escaper, languageLimit);
+        Map<String, String> textMap = excelToOthersMap(languageLimit, templateHolder);
 
         ByteArrayOutputStream bo = new ByteArrayOutputStream();
         ZipOutputStream zipOut = new ZipOutputStream(bo);
@@ -180,15 +216,14 @@ public class FileConvertService {
     }
 
 
-    public Map<String, String> excelToOthersMap(TableHolder tableHolder, String template, String stringPrefix, String stringSuffix, Escaper escaper, Set<String> languageLimit) throws IOException, InvalidFormatException {
-        TemplateHolder templateHolder = new NormalTemplateHolder(tableHolder, escaper, template, stringPrefix, stringSuffix);
-        List<String> titles = templateHolder.getFirstRowString();
+    public Map<String, String> excelToOthersMap(Set<String> languageLimit, TemplateHolder holder) throws IOException, InvalidFormatException {
+        List<String> titles = holder.getFirstRowString();
         Map<String, String> ret = new HashMap<>();
         for (int i = 1; i < titles.size(); i++) {
             String lang = titles.get(i);
             if (languageLimit != null && !languageLimit.contains(lang)) continue;
             if (ret.containsKey(lang)) continue;
-            String outputString = templateHolder.getRepacedTemplate(i);
+            String outputString = holder.getRepacedTemplate(i);
             ret.put(lang, outputString);
             System.out.println("translated:" + lang);
         }
@@ -249,8 +284,7 @@ public class FileConvertService {
         if (titleChangeLog != null) titleChangeLog.putAll(tempTitleChangeLog);
     }
 
-    public ByteArrayOutputStream buildTable(TableHolder tableHolder, Set<String> colNameSet, List<Map<String, String>> cellMapList) throws IOException {
-        List<String> colNames = new ArrayList<String>(colNameSet);
+    public ByteArrayOutputStream buildTable(TableHolder tableHolder, List<String> colNames, List<Map<String, String>> cellMapList) throws IOException {
         Map<String, Integer> nameIndexMap = new HashMap<>();
         for (Integer i = 0; i < colNames.size(); i++) {
             nameIndexMap.put(colNames.get(i), i);
@@ -262,9 +296,9 @@ public class FileConvertService {
             List<String> row = new ArrayList<>(colNames.size());
             for (Map.Entry<String, String> entry : colCellMap.entrySet()) {
                 String colName = entry.getKey();
-                Integer colIndex = nameIndexMap.get(nameIndexMap);
+                Integer colIndex = nameIndexMap.get(colName);
                 String CellValue = entry.getValue();
-                row.set(colIndex, CellValue);
+                row.add(colIndex, CellValue);
             }
             tableHolder.addRow(row);
         }

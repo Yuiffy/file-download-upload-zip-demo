@@ -12,36 +12,43 @@ import java.util.regex.Pattern;
 /**
  * Created by yuiff on 2017/1/3.
  */
-public class NormalReplacer implements Replacer {
+public class QuickReplacer implements Replacer {
 
     private Map<String, String> tokens;
+    private Pattern pattern;
 
-    public NormalReplacer() {
-        tokens = new HashMap<>();
+    public QuickReplacer() {
+        this.reset(new HashMap<String, String>());
     }
 
-    public NormalReplacer(Map<String, String> mp) {
-        tokens = mp;
+    public QuickReplacer(Map<String, String> mp) {
+        this.reset(mp);
     }
 
     @Override
     public String put(String key, String value) {
-        return tokens.put(key, value);
+        String ret = tokens.put(key, value);
+        updatePattern();
+        return ret;
     }
 
     @Override
     public void reset(Map<String, String> kvMap) {
         tokens = kvMap;
+        updatePattern();
     }
 
-    @Override
-    public String doReplace(String template) {
+    private void updatePattern() {
         List<String> keyList = new ArrayList<>();
         //do regex escape for value string, because will make keys into patternString
         for (String key : tokens.keySet())
             keyList.add(Pattern.quote(key));
         String patternString = "(" + StringUtils.join(keyList, "|") + ")";
-        Pattern pattern = Pattern.compile(patternString);
+        pattern = Pattern.compile(patternString);
+    }
+
+    @Override
+    public String doReplace(String template) {
         Matcher matcher = pattern.matcher(template);
 
         StringBuffer sb = new StringBuffer();

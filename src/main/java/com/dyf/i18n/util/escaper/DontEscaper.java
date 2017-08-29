@@ -8,11 +8,11 @@ import com.dyf.i18n.util.FileType;
 public class DontEscaper extends AbstractEscaper implements Escaper {
     private String fileExtension;
 
-    public DontEscaper(){
+    public DontEscaper() {
         this("txt");
     }
 
-    public DontEscaper(String fileExtension){
+    public DontEscaper(String fileExtension) {
         this.fileExtension = fileExtension;
     }
 

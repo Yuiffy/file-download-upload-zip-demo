@@ -18,7 +18,7 @@ public class ListStringUtil {
         String pre = prefix == null ? "" : prefix;
         String suf = suffix == null ? "" : suffix;
         List<String> ret = new ArrayList<>(list.size());
-        for(String item:list){
+        for (String item : list) {
             ret.add(pre + item + suf);
         }
         return ret;
@@ -44,7 +44,7 @@ public class ListStringUtil {
         return escaper.unescape(list);
     }
 
-    static public <K,V> Map<K, V> list2map(List<K> keyList, List<V> valueList) {
+    static public <K, V> Map<K, V> list2map(List<K> keyList, List<V> valueList) {
         Iterator<K> i1 = keyList.iterator();
         Iterator<V> i2 = valueList.iterator();
         Map<K, V> ret = new HashMap<>();
@@ -54,5 +54,22 @@ public class ListStringUtil {
         if (i1.hasNext() || i2.hasNext())
             System.out.println("key value list not same size: " + keyList.size() + "," + valueList.size());
         return ret;
+    }
+
+    static public <K, V> Map<K, V> array2map(K[] keyList, V[] valueList) {
+        Map<K, V> ret = new HashMap<>();
+        int i;
+        for (i = 0; i < keyList.length && i < valueList.length; i++) {
+            ret.put(keyList[i], valueList[i]);
+        }
+        if (i < keyList.length || i < valueList.length)
+            System.out.println("key value list not same size: " + keyList.length + "," + valueList.length);
+        return ret;
+    }
+
+    static public boolean isLookLikeEmpty(String s){
+        if(s==null || s.isEmpty())return true;
+        if(s.trim().isEmpty())return true;
+        return false;
     }
 }

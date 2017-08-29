@@ -11,7 +11,6 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-import sun.management.FileSystem;
 
 import java.io.*;
 import java.util.zip.ZipEntry;
@@ -30,7 +29,7 @@ public class FileController {
 
     @RequestMapping(value = "/test1.xls")
     @ResponseBody
-    FileSystemResource testDown1(){
+    FileSystemResource testDown1() {
         final String excelDirString = "./workfiles/excel2others/excelinput/";
         File excelDir = new File(excelDirString);
         File[] excelFiles = excelDir.listFiles(new FilenameFilter() {
@@ -69,16 +68,16 @@ public class FileController {
         File[] excelFiles = dir.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
-                System.out.println(dir+" "+name);
+                System.out.println(dir + " " + name);
                 return name.endsWith(".xls");
             }
         });
         if (excelFiles == null || excelFiles.length == 0)
             System.out.println(dir.getAbsolutePath() + " have not .xls files in it!");
         ByteArrayOutputStream bo = new ByteArrayOutputStream();
-        ZipOutputStream zipOut= new ZipOutputStream(bo);
-        for(File xlsFile:excelFiles){
-            if(xlsFile.isDirectory())continue;
+        ZipOutputStream zipOut = new ZipOutputStream(bo);
+        for (File xlsFile : excelFiles) {
+            if (xlsFile.isDirectory()) continue;
             ZipEntry zipEntry = new ZipEntry(xlsFile.getName());
             zipOut.putNextEntry(zipEntry);
             zipOut.write(IOUtils.toByteArray(new FileInputStream(xlsFile)));
@@ -96,9 +95,9 @@ public class FileController {
         if (filesArray == null || filesArray.length == 0)
             System.out.println(dir.getAbsolutePath() + " have no file!");
         ByteArrayOutputStream bo = new ByteArrayOutputStream();
-        ZipOutputStream zipOut= new ZipOutputStream(bo);
-        for(File xlsFile:filesArray){
-            if(!xlsFile.isFile())continue;
+        ZipOutputStream zipOut = new ZipOutputStream(bo);
+        for (File xlsFile : filesArray) {
+            if (!xlsFile.isFile()) continue;
             ZipEntry zipEntry = new ZipEntry(xlsFile.getName());
             zipOut.putNextEntry(zipEntry);
             zipOut.write(IOUtils.toByteArray(new FileInputStream(xlsFile)));

@@ -39,7 +39,7 @@ public class JsonFileHandler implements KeyValueFileHandler {
             String key = entry.getKey();
             Object data = entry.getValue();
             if (data instanceof String) {
-                String fullKey = parent +"." + key;
+                String fullKey = parent + "." + key;
                 kvMap.put(fullKey, new JsonObjectSaver(entry));
 //                System.out.println(fullKey);
             } else {
