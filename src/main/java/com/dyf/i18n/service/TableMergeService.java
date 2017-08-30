@@ -82,23 +82,30 @@ public class TableMergeService {
         ZipOutputStream zipOut = new ZipOutputStream(bo);
         Map<String, List<String>> thisResult = mergeLittleTableIntoMainTable(littleTableHolder, mainTableHolder);
 
+        //统计主表中找不到的语言
         List<String> languageNotIn = thisResult.get("languageNotIn");
-        List<String> keyNotIn = thisResult.get("keyNotIn");
         TableHolder languageNotInHolder = new ExcelTableHolder();
         languageNotInHolder.addRow(languageNotIn);
-        TableHolder keyNotInHolder = new ExcelTableHolder();
-        keyNotInHolder.setColumn("ENG", keyNotIn, 0);
 
-        zipOut.putNextEntry(new ZipEntry("mergedMainTable.xls"));
+        //统计主表中找不到english的部分
+        List<String> keyNotIn = thisResult.get("keyNotIn");
+        TableHolder keyNotInHolder = new ExcelTableHolder();
+        List<String> mainTitles = mainTableHolder.getRowString(0);
+        if (mainTitles.size() < 1) mainTitles.add("ENG");
+        keyNotInHolder.addRow(mainTitles);
+        keyNotInHolder.setColumn(mainTitles.get(0), keyNotIn, 0);
+        mergeLittleTableIntoMainTable(littleTableHolder, keyNotInHolder);
+
+        zipOut.putNextEntry(new ZipEntry("mergedMainTable(合并后的主表).xls"));
         mainTableHolder.write(zipOut);
 //        zipOut.write(outputString.getBytes("UTF-8"));  //这个地方一定要加字符集，因为getBytes字符集是根据系统而定的，这里必须写死
         zipOut.closeEntry();
 
-        zipOut.putNextEntry(new ZipEntry("tip_engNotInMainTable.xls"));
+        zipOut.putNextEntry(new ZipEntry("tip_engNotInMainTable(主表里找不到对应英文从而没有合并进去的部分，也有可能是英文有变化而没有匹配到。有需要可以手动把这部分接到主表下面。).xls"));
         keyNotInHolder.write(zipOut);
         zipOut.closeEntry();
 
-        zipOut.putNextEntry(new ZipEntry("tip_languageNotInMainTable.xls"));
+        zipOut.putNextEntry(new ZipEntry("tip_languageNotInMainTable(主表里找不到对应语言从而没有把这个语言合并进去).xls"));
         languageNotInHolder.write(zipOut);
         zipOut.closeEntry();
 
