@@ -107,7 +107,10 @@ public class ExcelTableHolder extends AbstractTableHolder implements TableHolder
 
     @Override
     public void write(OutputStream outputStream) throws IOException {
-        workbook.write(outputStream);
+//        workbook.write(outputStream);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        workbook.write(bos);//如果是HSSF的workbook，这个write会直接close掉流，导致zip流不能继续添加别的东西。所以搞个byte的流再write。
+        bos.writeTo(outputStream);
     }
 
     @Override
