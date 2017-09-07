@@ -172,8 +172,10 @@ public class FileConvertService {
         List<String> firstColumn = tableHolder.getColStringWithOutFirstRow(0);
         for (int i = 0; i < firstColumn.size(); i++) {
             List<String> row = tableHolder.getRowString(1 + i);
-            for (String str : row) {
-                if (str == null || str.isEmpty()) {
+            String engString = row.get(0);
+            for (int j=1; j<row.size(); j++) {
+                String str = row.get(j);
+                if (str == null || str.isEmpty() || str.equals("*") || str.equals(engString) || str.equals("数据库未找到")) {
                     ret.addRow(row);
                     break;
                 }

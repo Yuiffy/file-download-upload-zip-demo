@@ -98,6 +98,29 @@ public class i18nController {
         return "upload/excel2others";
     }
 
+    @GetMapping("/others2excel")
+    public String others2excel(Model model) throws IOException {
+        return "upload/others2excel";
+    }
+
+    @PostMapping("/others2excel.xls")
+    @ResponseBody
+    public byte[] others2excelPost(MultipartFile[] files, FileType fileType,
+                                   RedirectAttributes redirectAttributes) throws IOException, InvalidFormatException, ParserConfigurationException, SAXException {
+        List<String> listString = new ArrayList<>();
+        List<String> listName = new ArrayList<>();
+        for (MultipartFile file : files) {
+            String str = new String(file.getBytes(), ("UTF-8"));
+            listString.add(str);
+            listName.add(file.getName());
+        }
+        FileConvertService convertService = new FileConvertService();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        convertService.manyOtherToOneExcelFile(listString, listName, fileType, out);
+        return out.toByteArray();
+    }
+
+
     @GetMapping("/multiexcel")
     public String multiexcel2others() {
         return "upload/multiupload";
@@ -183,7 +206,7 @@ public class i18nController {
     @PostMapping("/excelmerge.zip")
     @ResponseBody
     public byte[] excelMergePost(MultipartFile file1, MultipartFile file2, FileType escapeType, FileType templateType, String prefix, String suffix, String outfilePrefix,
-                                        RedirectAttributes redirectAttributes) throws IOException, InvalidFormatException, ParserConfigurationException, SAXException {
+                                 RedirectAttributes redirectAttributes) throws IOException, InvalidFormatException, ParserConfigurationException, SAXException {
         String template = new String(file2.getBytes());
 //        System.out.println("template:\n"+template);
 //        template = new XmlFileHandler(template).getString();
