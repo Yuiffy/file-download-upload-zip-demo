@@ -64,15 +64,35 @@ public class FileConvertService {
         TableHolder excelHolder = new ExcelTableHolder();
         KeyValueFileHandler firstXmlHandler = FileHandlerFactory.createHandler(files.get(0), fileType);
         List<String> keyList = firstXmlHandler.getKeyList();
+        Map<String, String> keyMap = firstXmlHandler.getKeyValueMap();
+
         excelHolder.setColumn("string_id", keyList, 0);
         for (int i = 0; i < files.size(); i++) {
             String file = files.get(i);
             KeyValueFileHandler xmlHandler = FileHandlerFactory.createHandler(file, fileType);
             Map<String, String> kvMap = xmlHandler.getKeyValueMap();
-//            System.out.println(kvMap);
+
+            //if the file have new Key, add it to first column
+            List<String> newKeys = getNewKeyList(kvMap, keyMap);
+            if (newKeys.size() > 0) {
+                keyList.addAll(newKeys);
+                excelHolder.setColumn("string_id", keyList, 0);
+            }
+
             excelHolder.addColumn(filesName.get(i), kvMap, 0);
         }
         excelHolder.write(excelOutputStream);
+    }
+
+    //get new key in newMap of oldMap
+    private List<String> getNewKeyList(Map<String, String> newMap, Map<String, String> oldMap) {
+        List<String> ret = new ArrayList<>();
+        for (String key : newMap.keySet()) {
+            if (!oldMap.containsKey(key)) {
+                ret.add(key);
+            }
+        }
+        return ret;
     }
 
     //many json/xml, get the translate values of them, list in the first column of excel
@@ -173,7 +193,7 @@ public class FileConvertService {
         for (int i = 0; i < firstColumn.size(); i++) {
             List<String> row = tableHolder.getRowString(1 + i);
             String engString = row.get(0);
-            for (int j=1; j<row.size(); j++) {
+            for (int j = 1; j < row.size(); j++) {
                 String str = row.get(j);
                 if (str == null || str.isEmpty() || str.equals("*") || str.equals(engString) || str.equals("数据库未找到")) {
                     ret.addRow(row);

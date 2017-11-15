@@ -112,7 +112,9 @@ public class i18nController {
         for (MultipartFile file : files) {
             String str = new String(file.getBytes(), ("UTF-8"));
             listString.add(str);
-            listName.add(file.getName());
+            String name = file.getOriginalFilename();
+            //去除文件扩展名
+            listName.add(name .substring(0,name.lastIndexOf(".")));
         }
         FileConvertService convertService = new FileConvertService();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
