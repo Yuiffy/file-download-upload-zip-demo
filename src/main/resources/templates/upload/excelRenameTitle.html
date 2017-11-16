@@ -1,0 +1,28 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:if="${message}">
+    <h2 th:text="${message}"/>
+</div>
+<div><p>把excel第一行的文字根据规则替换。规则在第二个excel里。
+    规则文件第一行是被替换的文字，第二行是替换成的文字，一一对应。</p></div>
+<div>
+    <form method="POST" enctype="multipart/form-data" action="/i18n/renamedExcel.xls" target="_blank">
+        <table>
+            <tr>
+                <td>main Excel(xls) to upload:</td>
+                <td><input type="file" name="file1"/></td>
+            </tr>
+            <tr>
+                <td>name excel upload:</td>
+                <td><input type="file" name="file2"/></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td><input type="submit" value="Upload"/></td>
+            </tr>
+        </table>
+    </form>
+</div>
+</body>
+</html>

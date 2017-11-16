@@ -47,6 +47,22 @@ public class ExcelTableHolder extends AbstractTableHolder implements TableHolder
         return list;
     }
 
+    //编辑行，不会新建行。没有这行的话返回false，编辑成功返回true。
+    @Override
+    public Boolean setRowString(int rowIndex, List<String> rowList) {
+        Row row = sheet.getRow(rowIndex);
+        if (row == null) return false;
+        for (int i=0; i<rowList.size(); i++) {
+            Cell cell = row.getCell(i);
+            if(cell==null){
+                row.createCell(i);
+                cell = row.getCell(i);
+            }
+            cell.setCellValue(rowList.get(i));
+        }
+        return true;
+    }
+
     /**
      * with out first row
      *

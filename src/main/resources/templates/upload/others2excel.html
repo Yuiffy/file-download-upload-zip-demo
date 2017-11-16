@@ -4,7 +4,7 @@
 <div th:if="${message}">
     <h2 th:text="${message}"/>
 </div>
-<div><p>选择文件类型，把多个json或者xml合到一个excel中</p></div>
+<div><p>选择文件类型，把多个json或者xml合到一个excel中。选择文件时按住ctrl键选取多个。</p></div>
 <div>
     <form method="POST" enctype="multipart/form-data" action="/i18n/others2excel.xls">
         <table>

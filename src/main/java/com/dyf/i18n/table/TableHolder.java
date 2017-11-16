@@ -26,6 +26,9 @@ public interface TableHolder {
 
     List<String> getRowString(int rowIndex);
 
+    //编辑行，不会新建行。没有这行的话返回false，编辑成功返回true。
+    Boolean setRowString(int rowIndex, List<String> rowList);
+
     void write(OutputStream outputStream) throws IOException;
 
     void merge(TableHolder other);

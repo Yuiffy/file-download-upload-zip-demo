@@ -4,6 +4,7 @@ import com.dyf.download.FileUploadController;
 import com.dyf.download.storage.StorageService;
 import com.dyf.i18n.service.FileConvertService;
 import com.dyf.i18n.service.TableMergeService;
+import com.dyf.i18n.service.ToolService;
 import com.dyf.i18n.table.ExcelTableHolder;
 import com.dyf.i18n.table.TableHolder;
 import com.dyf.i18n.util.FileType;
@@ -114,7 +115,7 @@ public class i18nController {
             listString.add(str);
             String name = file.getOriginalFilename();
             //去除文件扩展名
-            listName.add(name .substring(0,name.lastIndexOf(".")));
+            listName.add(name.substring(0, name.lastIndexOf(".")));
         }
         FileConvertService convertService = new FileConvertService();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -209,7 +210,6 @@ public class i18nController {
     @ResponseBody
     public byte[] excelMergePost(MultipartFile file1, MultipartFile file2, FileType escapeType, FileType templateType, String prefix, String suffix, String outfilePrefix,
                                  RedirectAttributes redirectAttributes) throws IOException, InvalidFormatException, ParserConfigurationException, SAXException {
-        String template = new String(file2.getBytes());
 //        System.out.println("template:\n"+template);
 //        template = new XmlFileHandler(template).getString();
 //        System.out.println("template2:\n"+template);
@@ -221,6 +221,24 @@ public class i18nController {
 //            tableHolders.add(new ExcelTableHolder(files[i].getInputStream()));
 //        ByteArrayOutputStream out = convertService.excelToOtherZip(tableHolders, template, prefix, suffix, EscaperFactory.getEscaper(escapeType), templateType, outfilePrefix, null);
         ByteArrayOutputStream out = service.mergeLittleTableIntoMainTableZipWithTip(littleHolder, mainHolder);
+        return out.toByteArray();
+    }
+
+    @GetMapping("/excelrenametitle")
+    public String excelRenameTitle() {
+        return "upload/excelRenameTitle";
+    }
+
+    @PostMapping("/renamedExcel.xls")
+    @ResponseBody
+    public byte[] renamedExcel(MultipartFile file1, MultipartFile file2, FileType escapeType, FileType templateType, String prefix, String suffix, String outfilePrefix,
+                               RedirectAttributes redirectAttributes) throws IOException, InvalidFormatException, ParserConfigurationException, SAXException {
+        TableHolder mainHolder = new ExcelTableHolder(file1.getInputStream());
+        TableHolder nameHolder = new ExcelTableHolder(file2.getInputStream());
+        ToolService service = new ToolService();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        service.renameTitleNameByExcel(mainHolder, nameHolder);
+        mainHolder.write(out);
         return out.toByteArray();
     }
 }
