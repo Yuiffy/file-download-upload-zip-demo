@@ -61,8 +61,13 @@ public class TableMergeService {
                     } else {
                         String littleValue = littleCol.get(i);
                         String oldMainValue = mainCol.get(mainRowNum);//TODO: 这个变量无转换用途，是要用于统计或log
-                        mainCol.set(mainRowNum, littleValue);
-//                        System.out.println("change!"+oldMainValue+" => "+littleValue);
+                        //如果小表没翻译，并且大表翻译了，就不覆盖
+                        if (isNotTranslated(littleValue, littleKey) && !isNotTranslated(oldMainValue, littleKey)) {
+
+                        } else {
+                            mainCol.set(mainRowNum, littleValue);
+                            //System.out.println("change!"+oldMainValue+" => "+littleValue);
+                        }
                     }
                 }
                 isFirstRunCol = false;
@@ -75,6 +80,10 @@ public class TableMergeService {
         ret.put("languageNotIn", theLanguagesNotInMain);
         ret.put("keyNotIn", theKeyNotInMain);
         return ret;
+    }
+
+    private boolean isNotTranslated(String str, String engString) {
+        return (str == null || str.isEmpty() || "*".equals(str) || str.equals(engString) || str.equals("数据库未找到"));
     }
 
     public ByteArrayOutputStream mergeLittleTableIntoMainTableZipWithTip(TableHolder littleTableHolder, TableHolder mainTableHolder) throws IOException {

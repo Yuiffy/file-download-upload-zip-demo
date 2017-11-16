@@ -201,7 +201,7 @@ public class FileConvertService {
             } else {
                 for (int j = 1; j < row.size(); j++) {
                     String str = row.get(j);
-                    if (str == null || str.isEmpty() || str.equals("*") || str.equals(engString) || str.equals("数据库未找到")) {
+                    if (isNotTranslated(str, engString)) {
                         ret.addRow(row);
                         break;
                     }
@@ -209,6 +209,10 @@ public class FileConvertService {
             }
         }
         return ret;
+    }
+
+    private boolean isNotTranslated(String str, String engString) {
+        return (str == null || str.isEmpty() || "*".equals(str) || str.equals(engString) || str.equals("数据库未找到"));
     }
 
     public ByteArrayOutputStream excelToOtherZip(List<TableHolder> tableHolders, String template, String stringPrefix, String stringSuffix, FileType escapeType, FileType templateFitType, String outputFileNamePrefix, Set<String> languageLimit) throws IOException, InvalidFormatException, ParserConfigurationException, SAXException {
