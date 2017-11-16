@@ -73,9 +73,10 @@ public class FileConvertService {
             Map<String, String> kvMap = xmlHandler.getKeyValueMap();
 
             //if the file have new Key, add it to first column
-            List<String> newKeys = getNewKeyList(kvMap, keyMap);
-            if (newKeys.size() > 0) {
-                keyList.addAll(newKeys);
+            Map<String, String> newlyAdded = getNewlyAddedEntry(kvMap, keyMap);
+            if (newlyAdded.size() > 0) {
+                keyMap.putAll(newlyAdded);
+                keyList.addAll(newlyAdded.keySet());
                 excelHolder.setColumn("string_id", keyList, 0);
             }
 
@@ -85,11 +86,11 @@ public class FileConvertService {
     }
 
     //get new key in newMap of oldMap
-    private List<String> getNewKeyList(Map<String, String> newMap, Map<String, String> oldMap) {
-        List<String> ret = new ArrayList<>();
-        for (String key : newMap.keySet()) {
-            if (!oldMap.containsKey(key)) {
-                ret.add(key);
+    private Map<String, String> getNewlyAddedEntry(Map<String, String> newMap, Map<String, String> oldMap) {
+        Map<String, String> ret = new HashMap<>();
+        for (Map.Entry<String, String> entry : newMap.entrySet()) {
+            if (!oldMap.containsKey(entry.getKey()) && !entry.getValue().isEmpty()) {
+                ret.put(entry.getKey(), entry.getValue());
             }
         }
         return ret;
@@ -188,16 +189,22 @@ public class FileConvertService {
 
     public TableHolder getLanguageNotTranslate(TableHolder tableHolder) {
         TableHolder ret = new ExcelTableHolder();
-        ret.addRow(tableHolder.getFirstRowString());
+        List<String> firstRowString = tableHolder.getFirstRowString();
+        ret.addRow(firstRowString);
         List<String> firstColumn = tableHolder.getColStringWithOutFirstRow(0);
         for (int i = 0; i < firstColumn.size(); i++) {
             List<String> row = tableHolder.getRowString(1 + i);
             String engString = row.get(0);
-            for (int j = 1; j < row.size(); j++) {
-                String str = row.get(j);
-                if (str == null || str.isEmpty() || str.equals("*") || str.equals(engString) || str.equals("数据库未找到")) {
-                    ret.addRow(row);
-                    break;
+            if (row.size() < firstRowString.size()) {//语言都没有填满，肯定有空的
+                ret.addRow(row);
+//                System.out.println("rowNum = "+i+", rowSize = "+row.size()+", ret.col.size="+ret.getColStringWithOutFirstRow(0).size());
+            } else {
+                for (int j = 1; j < row.size(); j++) {
+                    String str = row.get(j);
+                    if (str == null || str.isEmpty() || str.equals("*") || str.equals(engString) || str.equals("数据库未找到")) {
+                        ret.addRow(row);
+                        break;
+                    }
                 }
             }
         }
@@ -273,9 +280,10 @@ public class FileConvertService {
         for (int i = 0; i < rowTitles.size(); i++) {
             strIndexMap.put(rowTitles.get(i), i);
             String fakeTitle = fakeRowTitles.get(i);
+            //TODO:因为有Sports,Sport就没加进去；因为有option，Option就没加进去；待修改
             if (fakeMap.containsKey(fakeTitle)) {
                 Integer repeatIndex = fakeMap.get(fakeTitle);
-                System.out.println("fake title repeat! I will only handle the first, won't add " + i + " : " + rowTitles.get(i) +
+                System.out.println("fake title repeat! I will only add the first into fakeMap, won't add " + i + " : " + rowTitles.get(i) +
                         "\t" + repeatIndex + " : " + rowTitles.get(repeatIndex));
             } else
                 fakeMap.put(fakeRowTitles.get(i), i);
