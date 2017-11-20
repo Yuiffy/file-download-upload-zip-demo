@@ -84,7 +84,7 @@ public class MultiPrefixTemplateHolder implements TemplateHolder {
             keyList.addAll(newKeyList);
             valueList.addAll(newValueList);
         }
-        Map<String, String> kvMap = ListStringUtil.list2map(keyList, valueList);
+        Map<String, String> kvMap = ListStringUtil.list2mapPreferDifferent(keyList, valueList, prefix, suffix);
 //        System.out.println(kvMap);
         replacer.reset(kvMap);
         String outputString = replacer.doReplace(template);

@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.poi.ss.usermodel.Row.CREATE_NULL_AS_BLANK;
+
 /**
  * Created by yuiff on 2017/1/3.
  */
@@ -39,10 +41,12 @@ public class ExcelTableHolder extends AbstractTableHolder implements TableHolder
     @Override
     public List<String> getRowString(int rowIndex) {
         Row row = sheet.getRow(rowIndex);
-        List<String> list = new ArrayList<>();
+        int lastIndex = row.getLastCellNum();//base1，也就是比最大的坐标多1
+        List<String> list = new ArrayList<>(lastIndex + 1);
         if (row == null) return list;
-        for (Cell cell : row) {
-            list.add(cell.toString());
+        //此处不能用for(Cell cell:row)，很关键。那样for的话会跳过空格，得出来的东西很逗
+        for (int i = 0; i < lastIndex; i++) {
+            list.add(row.getCell(i, CREATE_NULL_AS_BLANK).getStringCellValue());
         }
         return list;
     }
@@ -52,9 +56,9 @@ public class ExcelTableHolder extends AbstractTableHolder implements TableHolder
     public Boolean setRowString(int rowIndex, List<String> rowList) {
         Row row = sheet.getRow(rowIndex);
         if (row == null) return false;
-        for (int i=0; i<rowList.size(); i++) {
+        for (int i = 0; i < rowList.size(); i++) {
             Cell cell = row.getCell(i);
-            if(cell==null){
+            if (cell == null) {
                 row.createCell(i);
                 cell = row.getCell(i);
             }
@@ -78,6 +82,13 @@ public class ExcelTableHolder extends AbstractTableHolder implements TableHolder
             if (row == null) continue;
             Cell cell = row.getCell(colnum);
             String value = (cell == null) ? "" : cell.toString();
+//            if ("Кино".equals(value)) {
+//                for (int j = 0; j < row.getLastCellNum(); j++) {
+//                    Cell c = row.getCell(j, CREATE_NULL_AS_BLANK);
+//                    System.out.printf("%d.%s,",c.getColumnIndex(), c.getStringCellValue());
+//                }
+//                System.out.println("");
+//            }
             list.add(value);
         }
         return list;

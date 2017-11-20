@@ -258,7 +258,7 @@ public class FileConvertService {
             if (ret.containsKey(lang)) continue;
             String outputString = holder.getRepacedTemplate(i);
             ret.put(lang, outputString);
-            System.out.println("translated:" + lang);
+            System.out.println("translated:" + lang + ", colNum=" + i);
         }
         return ret;
     }
